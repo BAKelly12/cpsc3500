@@ -20,11 +20,23 @@ int main(){
         stringstream check1(input);
         vector <string> tokens;
         string intermediate;
-        while(getline(check1, intermediate, ' ')){
+        while(getline(check1, intermediate, ' '))
                 tokens.push_back(intermediate);
-        } 
+
         for(unsigned int i = 0; i < tokens.size(); i++)
                 cout << tokens[i] << endl;
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 

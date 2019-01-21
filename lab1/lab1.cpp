@@ -5,41 +5,88 @@
  * @see "Seattle University CPSC3500 Winter 2019"
  */
 
-
+#include <unistd.h>
+#include <sys/wait.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <iostream>
 #include <string>
 #include <cctype>
+#include <bits/stdc++.h> 
 using namespace std;
 
 struct command{
 	char buf[50][100];
 
-
-
 };
 
-void* parcer(string& input);
+string* parcer(string& input);
+void process_terminated(pid_t &pid);
+int lp(char** args);
 
-int main()
+
+int main(int argc, char** argv)
 {
-  string input;			
+ string input;			
 //Print the shell prompt, separate the string into vectors separated by space
   cout << "MyShell$ ";
   getline(cin,input);
   cout << input << endl;
-  parcer(input);
+  string* tokens;
+  tokens = parcer(input);
 
-
+  int n = tokens->length()+1;
+  char args[n];
+  strcpy(args, tokens->c_str());
+  for(int i = 0; i<10; i++)
+          cout << args[i]<<endl;
 
 }
 
+/*************
+ * FUNCTIONS *
+ *************
+ */
 
 
+int lp(char** args){
 
-void* parcer(string& input){
+  pid_t cp,w;
+  cp = fork();
+  if(!cp){                  
+          //This is the child process
+          if(execvp(args[0], args)==-1)
+                  perror("error executing");
+  }else if(cp<0){
+          perror("There was an error with fork");
+  }else{
+          //This is the parent process, need to wait for child to finish
+          //this code is adapted from Dr. Zhu's example in the additional
+          //reading section of canvas.
+          int child_status;
+          do{
+                  w = wait(&child_status);
+                  if(w != cp) process_terminated(w);
+          }while(w != cp);
+  }
+  return 1;
+
+}
+void process_terminated(pid_t& pid){
+     
+        //I think pipe should be closed here as well - Bri
+        //
+        //
+        //
+        kill(pid, SIGKILL);
+        cout << pid << endl;
+
+}
+
+string* parcer(string& input){
 	//Parce Function  
         int token(0);
-        string tokenBank[50];
+        static string tokenBank[50];
         unsigned int stringChecker(0);
         for (unsigned i = 0; i < input.length(); i++) {
                 if (input[i] == '\'') { //Single quote parce
@@ -72,31 +119,7 @@ void* parcer(string& input){
                         i = stringChecker - 1; //Push index back due to possible pipe
                 }
         }
-	cout << endl << endl << endl << "Now the bank:";
-	cout << token;
-	for (int i = 0; i < token; i++) {
-		cout << endl << tokenBank[i];	
-	}
 	
 	cout << endl << endl;
-    return NULL;
-}
-
-
-
-
-
-	/*	
-	stringstream check1(input);
-  vector <string> tokens;
- 	string intermediate;
-  
-	while (getline(check1, intermediate, '\"')
-		tokens.push_back(intermediate);
-
-	while(getline(check1, intermediate, ' '))
-  	tokens.push_back(intermediate);
-
-  for(unsigned int i = 0; i < tokens.size(); i++)
-		cout << tokens[i] << endl;
-	*/	
+    return tokenBank;
+}	

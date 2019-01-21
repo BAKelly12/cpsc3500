@@ -20,7 +20,7 @@ struct command{
 
 };
 
-string* parcer(string& input);
+string* parcer(void);
 void process_terminated(pid_t &pid);
 int lp(char** args);
 
@@ -28,15 +28,12 @@ int lp(char** args);
 int main(int argc, char** argv)
 {
 
-  string input;			
-
-  //Print the shell prompt, get line, split into tokens and convert 
+   //Print the shell prompt, get line, split into tokens and convert 
   //to char** for input into execvp
 
   cout << "MyShell$ ";
-  getline(cin,input); 
-  string* tokens;
-  tokens = parcer(input);
+  
+  string* tokens = parcer();
   int n = tokens->length()+1;
   char args[n];
   strcpy(args, tokens->c_str());
@@ -45,12 +42,15 @@ int main(int argc, char** argv)
   //for(int i = 0; i<n; i++)
     //      cout << args[i];
  
-  cout << endl;
+  cout <<"in main"<< endl;
 
 
   //this is a dirty way of doing this
   char** argi = new char*;
   *argi = args;
+  cout << "Tokens: " << *tokens << endl;
+  cout << "result of strcpy: " << args << endl;
+  cout <<"argin: " <<  argi<<endl;
   cout << "Exit Status of exec: " << lp(argi)<<endl;
   free(argi);
 }
@@ -62,6 +62,11 @@ int main(int argc, char** argv)
 
 
 int lp(char** args){
+  cout << "in lp" << endl;
+
+  //for(unsigned int i = 0; i<sizeof(args)-1;i++)
+          cout << *args;
+  cout<<endl;
 
   pid_t cp,w;
   cp = fork();
@@ -95,10 +100,13 @@ void process_terminated(pid_t& pid){
 
 }
 
-string* parcer(string& input){
-	//Parce Function  
+string* parcer(void){
+	//Parse Function
+
+        string input;
+        getline(cin,input); 
         int token(0);
-        static string tokenBank[50];
+        static string tokenBank[10];
         unsigned int stringChecker(0);
         for (unsigned i = 0; i < input.length(); i++) {
                 if (input[i] == '\'') { //Single quote parce
@@ -131,6 +139,7 @@ string* parcer(string& input){
                         i = stringChecker - 1; //Push index back due to possible pipe
                 }
         }
-	
+	cout << "In parser: " << endl <<"Input: " <<input << endl;
+    cout << "tokenBank: "<< *tokenBank << endl<<endl;
     return tokenBank;
 }	

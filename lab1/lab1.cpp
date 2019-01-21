@@ -27,19 +27,27 @@ int lp(char** args);
 
 int main(int argc, char** argv)
 {
- string input;			
+
+  string input;			
 //Print the shell prompt, separate the string into vectors separated by space
   cout << "MyShell$ ";
-  getline(cin,input);
-  cout << input << endl;
+  getline(cin,input); 
   string* tokens;
   tokens = parcer(input);
-
   int n = tokens->length()+1;
   char args[n];
   strcpy(args, tokens->c_str());
-  for(int i = 0; i<10; i++)
-          cout << args[i]<<endl;
+
+  cout << "args[0]: " << args[0] << endl;
+  
+  for(int i = 0; i<n; i++)
+          cout << args[i];
+
+  cout << endl;
+  char** argi = new char*;
+  *argi = args;
+
+  cout << lp(argi) << endl;;
 
 }
 
@@ -120,6 +128,5 @@ string* parcer(string& input){
                 }
         }
 	
-	cout << endl << endl;
     return tokenBank;
 }	

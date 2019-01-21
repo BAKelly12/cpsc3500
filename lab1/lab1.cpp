@@ -20,10 +20,10 @@ struct command{
 
 };
 
-string* parcer(void);
+char** parcer(void);
 void process_terminated(pid_t &pid);
 int lp(char** args);
-
+char** startochar(string str[]);
 
 int main(int argc, char** argv)
 {
@@ -33,11 +33,8 @@ int main(int argc, char** argv)
 
   cout << "MyShell$ ";
   
-  string* tokens = parcer();
-  int n = tokens->length()+1;
-  char args[n];
-  strcpy(args, tokens->c_str());
- 
+  char** input = parcer();
+
   //cout << "args[0]: " << args[0] << endl;
   //for(int i = 0; i<n; i++)
     //      cout << args[i];
@@ -46,13 +43,13 @@ int main(int argc, char** argv)
 
 
   //this is a dirty way of doing this
-  char** argi = new char*;
-  *argi = args;
-  cout << "Tokens: " << *tokens << endl;
-  cout << "result of strcpy: " << args << endl;
-  cout <<"argin: " <<  argi<<endl;
-  cout << "Exit Status of exec: " << lp(argi)<<endl;
-  free(argi);
+  //char** argi = new char*;
+  //*argi = args;
+  //cout << "Tokens: " << *tokens << endl;
+  //cout << "result of strcpy: " << args << endl;
+  //cout <<"argin: " <<  argi<<endl;
+  cout << "Exit Status of exec: " << lp(input)<<endl;
+  //free(argi);
 }
 
 /*************
@@ -100,46 +97,96 @@ void process_terminated(pid_t& pid){
 
 }
 
-string* parcer(void){
+char** parcer(void){
 	//Parse Function
-
         string input;
         getline(cin,input); 
+        cout << endl;
         int token(0);
         static string tokenBank[10];
         unsigned int stringChecker(0);
-        for (unsigned i = 0; i < input.length(); i++) {
-                if (input[i] == '\'') { //Single quote parce
-		                        stringChecker = i + 1; //So it won't break out of loop immediately
-                       while (input[stringChecker] != '\'')
-                                stringChecker++;
-                       tokenBank[token] = input.substr(i + 1, stringChecker - (i+1));
-                       token++;
-                       i = stringChecker;
-                }	
-                else if (input[i] == '\"') { //Double quote  
-                        stringChecker = i + 1;
-                        while (input[stringChecker] != '\"')
-                                stringChecker++;
-                        tokenBank[token] = input.substr(i + 1, stringChecker - (i+1));
-                        token++;
-                        i = stringChecker;
-                }
-                else if (input[i] == '|') { //Pipe
-                        tokenBank[token] = input[i];
-                        token++;
-                        cout << "spaghetti";
-                }
-                else if (input[i] != ' ') { //Non space characters
-                        stringChecker = i;
-                        while (input[stringChecker] != '|' && input[stringChecker] != ' ' &&  stringChecker < input.length() )
-                                stringChecker++;
-                        tokenBank[token] = input.substr(i, stringChecker - i);
-                        token++;
-                        i = stringChecker - 1; //Push index back due to possible pipe
-                }
-        }
-	cout << "In parser: " << endl <<"Input: " <<input << endl;
+    for (unsigned i = 0; i < input.length(); i++) {   
+            if (input[i] == '\'') { //Single quote parce            
+                    stringChecker = i + 1; //So it won't break out of loop immediately  
+                    while (input[stringChecker] != '\'')      
+                            stringChecker++;                    
+                    tokenBank[token] = input.substr(i + 1, stringChecker - (i+1));
+                    token++;                                                                    
+                    i = stringChecker;                
+            }else if (input[i] == '\"') { //Double quote parce
+                    stringChecker = i + 1;                                        
+                    while (input[stringChecker] != '\"')                            
+                            stringChecker++;                    
+
+                    tokenBank[token] = input.substr(i + 1, stringChecker - (i+1));                   
+                    token++;                                                            
+                    i = stringChecker;
+                
+            }else if (input[i] == '|') { //Pipe             
+                    tokenBank[token] = input[i];                    
+                    token++;                                    
+                    cout << "spaghetti";
+            
+            }else if (input[i] != ' ') { //Non space characters           
+                    stringChecker = i;                    
+                    while (input[stringChecker] != '|' && input[stringChecker] != ' ' && stringChecker < input.length() )                            
+                            stringChecker++;                                            
+                    tokenBank[token] = input.substr(i, stringChecker - i);  
+                    token++;
+                    i = stringChecker - 1; //Push index back due to possible pipe           
+            }
+    }
+
+
+    
+    cout << endl << endl << endl << "Now the bank:"; 
+    cout << "Token?: " << token<< endl<<endl;
+/**
+    for (int i = 0; i < token; i++) {                  
+            cout << endl << tokenBank[i];
+            args[i] = tokenBank[i]; 
+    }
+*/
+
+
+    cout << "In parser: " << endl <<"Input: " <<input << endl;
     cout << "tokenBank: "<< *tokenBank << endl<<endl;
-    return tokenBank;
-}	
+
+    char** args = startochar(tokenBank);
+//    int n = tokenBank.length()+1;
+
+ 
+    return args;
+
+
+}
+
+//@brief Takes tokenized string array and converts to char** array
+char** startochar(string str[]){
+
+        
+    char** args[str->length()+1];
+    //int pos=0;
+    string tmp;
+    cout << "In startochar: " << endl;
+
+//    int pos;
+  //  char space = ' ';
+    for(unsigned i = 0; i <str->length();i++) {
+            cout << str[i];
+            tmp = str[i];
+            for(unsigned j = 0;j<tmp.length();j++){
+                  //  **args[pos]=tmp[j];
+                  //  pos++;
+                    cout<<tmp[j]<<endl;
+            }
+//            **args[pos]=space;
+  //          pos++;
+               
+        }
+        
+    return *args;
+
+}
+
+

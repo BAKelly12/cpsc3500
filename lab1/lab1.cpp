@@ -29,7 +29,10 @@ int main(int argc, char** argv)
 {
 
   string input;			
-//Print the shell prompt, separate the string into vectors separated by space
+
+  //Print the shell prompt, get line, split into tokens and convert 
+  //to char** for input into execvp
+
   cout << "MyShell$ ";
   getline(cin,input); 
   string* tokens;
@@ -37,18 +40,19 @@ int main(int argc, char** argv)
   int n = tokens->length()+1;
   char args[n];
   strcpy(args, tokens->c_str());
-
-  cout << "args[0]: " << args[0] << endl;
-  
-  for(int i = 0; i<n; i++)
-          cout << args[i];
-
+ 
+  //cout << "args[0]: " << args[0] << endl;
+  //for(int i = 0; i<n; i++)
+    //      cout << args[i];
+ 
   cout << endl;
+
+
+  //this is a dirty way of doing this
   char** argi = new char*;
   *argi = args;
-
-  cout << lp(argi) << endl;;
-
+  cout << "Exit Status of exec: " << lp(argi)<<endl;
+  free(argi);
 }
 
 /*************
@@ -87,7 +91,7 @@ void process_terminated(pid_t& pid){
         //
         //
         kill(pid, SIGKILL);
-        cout << pid << endl;
+        cout<< "Killed child.: "  << pid << endl;
 
 }
 

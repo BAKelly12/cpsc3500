@@ -15,12 +15,7 @@
 #include <bits/stdc++.h> 
 using namespace std;
 
-struct command{
-	char buf[50][100];
-
-};
-
-string* parcer(string& input);
+char* parcer(string& input);
 void process_terminated(pid_t &pid);
 int lp(char** args);
 
@@ -35,12 +30,17 @@ int main(int argc, char** argv)
 
   cout << "MyShell$ ";
   getline(cin,input); 
-  string* tokens;
+  
+	/*
+	string* tokens;
   tokens = parcer(input);
   int n = tokens->length()+1;
   char args[n];
   strcpy(args, tokens->c_str());
- 
+	*/ 
+	char* args = parcer(input);
+
+
   //cout << "args[0]: " << args[0] << endl;
   //for(int i = 0; i<n; i++)
     //      cout << args[i];
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 
 int lp(char** args){
 
-  pid_t cp,w;
+	pid_t cp,w;
   cp = fork();
   if(!cp){                  
           //This is the child process
@@ -95,7 +95,7 @@ void process_terminated(pid_t& pid){
 
 }
 
-string* parcer(string& input){
+char* parcer(string& input){
 	//Parce Function  
         int token(0);
         static string tokenBank[50];
@@ -132,5 +132,21 @@ string* parcer(string& input){
                 }
         }
 	
-    return tokenBank;
+				char charArray[50];
+				int charArrayIndex = 0;
+				for (int i = 0; i < token; i++) {
+					for (unsigned j = 0; j < tokenBank[i].length(); j++) {
+						charArray[charArrayIndex] = tokenBank[i][j];
+						charArrayIndex++;
+					}
+					charArray[charArrayIndex] = ' ';
+					charArrayIndex++;
+				}
+				charArray[charArrayIndex-1] = NULL;				
+	
+				//Troubleshooting char array
+				for (int i = 0; i < charArrayIndex-1; i++)
+					cout << charArray[i] << endl;
+	
+    return charArray;
 }	

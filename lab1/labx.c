@@ -64,7 +64,7 @@ int spawn_proc (int in, int out, struct command *cmd)
 	return pid;	
 }
 
-int parseIntoCommands()
+int parseIntoCommandTable()
 {
 	
 	int max = 100; //User string length
@@ -159,15 +159,17 @@ int parseIntoCommands()
 	}
 	command[commandNumber][counter] = NULL;
 	
-	//const char* 
 
-	struct command cmd[] = {command[0], command[1]};
+
+	//Assuming max of 10 commands, make structure array that contains 
+	//all possible commands. If less that the max, the forkPipes tells
+	//how many 
+	struct command cmd[] = {command[0], command[1], command[2], command[3],
+													command[4], command[5], command[6], command[7],
+													command[8], command[9]};
 	
 	return fork_pipes (numPipes + 1, cmd);
-	
 	//return 1;
-
-
 }
 
 

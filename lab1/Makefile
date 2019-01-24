@@ -11,7 +11,7 @@ p1:
 	$(CC) $(LFLAGS) -o p1 p1.c
 
 tar: 
-	tar -cvf  p1.tar  README  p1.c  Makefile 
+	tar -cvf  p1.tar  README moby.txt p1.c  Makefile 
 
 submit: 
 	/home/fac/zhuy/class/SubmitHW/submit3500 p1 p1.tar

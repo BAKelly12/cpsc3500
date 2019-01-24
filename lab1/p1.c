@@ -1,22 +1,28 @@
- /**
- *@file p1.c
- *@description implemntation of a rudimentary command
- *               line shell
- *@Authors Sam Van Nes, Brigid Kelly
- *@see "Seattle University CPSC3500 Winter 2019
+/**
+ * @file labx.c
+ * @description implemntation of a rudimentary command-
+ *          line shell
+ * @Authors Sam Van Nes, Brigid Kelly
+ * @see "Seattle University CPSC3500 Winter 2019"
  */
-  
+
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-struct command
-{
+struct command{
 	const char **argv;
 };
 
+int parseIntoCommands();
+int main()
+{
+	//New program
+	parseIntoCommands();
+    return 1;
+}
 
 /**
  * @brief
@@ -24,41 +30,21 @@ struct command
  * @return
  */
 
-void parseIntoCommandTable();
-
-int main()
-{
-        //New program
-	
-	    parseIntoCommandTable();
-        return 1;
-}
-/**
- * @brief 
- * @param
- * @return
- */
-
-void fork_pipes (int n, struct command *cmd)
-{
+int fork_pipes (int n, struct command *cmd){
 	int i;
 	pid_t pid;
 	int in, fd[2];
-
 	in = 0;
 	for (i = 0; i < n-1; i++) {
 		pipe (fd);
-		pid = spawn_proc (in, fd[1], cmd + i);
+		spawn_proc (in, fd[1], cmd + i);
 		close (fd[1]);
 		in = fd [0];
 	}
 	if (in != 0)
 		dup2 (in, 0);
-
-     //unsigned es = execvp(cmd[i].argv[0], (char* const*) cmd[i].argv);
-     //if(!es)
-      //       perror("Failed to execute.");
-} 
+	return execvp( cmd[i].argv[0], (char* const*) cmd[i].argv);
+}
 
 /**
  * @brief
@@ -66,11 +52,9 @@ void fork_pipes (int n, struct command *cmd)
  * @return
  */
 
-pid_t spawn_proc (int in, int out, struct command *cmd)
-{
-	pid_t pid, w;
-    pid = fork(); 
-	if (!pid) {//This is the child process
+int spawn_proc (int in, int out, struct command *cmd){
+	pid_t pid;
+	if ((pid = fork()) == 0) {
 		if (in != 0) {
 			dup2 (in, 0);
 			close (in);
@@ -78,29 +62,18 @@ pid_t spawn_proc (int in, int out, struct command *cmd)
 			dup2 (out, 1);
 			close (out);
 		}
-        execvp( cmd->argv[0], (char* const *)cmd->argv);
-    }else if(pid<0)
-            perror("Something went wrong 8).. ");
-    else{//Parent process
-            int child_status;
-            waitpid(pid, &child_status, 0);
-            if(WIFEXITED(child_status)){
-                    int es = WEXITSTATUS(child_status);
-                    printf("%i EXIT STATUS: %d\n", pid, es);
-            }
-    }                 
-   return pid;	
+		return execvp( cmd->argv[0], (char* const *)cmd->argv);
+	}
+	return pid;	
 }
 
 /**
- * @brief
- * @param
- * @return
+ * @brief receives input from stdin and parses the line for tokens and delimiters
+ *        delims include{' , " , \t , \n, \r, | , " " }
+ * @param none
+ * @return int - success or failure of fork_pipes function
  */
-
-void parseIntoCommandTable()
-{
-	
+int parseIntoCommands(){
 	int max = 100; //User string length
 	char getPlz[max]; //Actual string given by user
   
@@ -130,7 +103,7 @@ void parseIntoCommandTable()
 			//Reset for next command
 			colBuf = 0;
 			rowBuf++;
-			stringIndex++; //itr on Special char, so go past it.
+			stringIndex++; //This means its on a special char, so go past it.
 	
 		} else if (getPlz[stringIndex] == '\"') { //Double quote parce	
   		stringIndex++;
@@ -144,7 +117,7 @@ void parseIntoCommandTable()
 			//Reset for next command
 			colBuf = 0;
 			rowBuf++;
-			stringIndex++; //itr on Special char, so go past it.
+			stringIndex++; //This means its on a special char, so go past it.
 		
 		} else if (getPlz[stringIndex] == '|') {
 			numPipes++;
@@ -154,8 +127,8 @@ void parseIntoCommandTable()
 			colBuf = 0;
 			stringIndex++;
 
-		} else if (getPlz[stringIndex] != ' ') { //Some character parse	
-			while (getPlz[stringIndex] != ' ' && stringIndex < strLength && getPlz[stringIndex] != '|'){
+		} else if (getPlz[stringIndex] != ' ') { //Some character parce	
+			while (getPlz[stringIndex] != ' ' && stringIndex < strLength) {
 				buf[rowBuf][colBuf] = getPlz[stringIndex];
 				colBuf++;
 				stringIndex++;
@@ -169,7 +142,8 @@ void parseIntoCommandTable()
 		} else
 			stringIndex++;
 	}
- 
+    
+    //Init vars and copy buffer into args array
 	char* args[50];
 	int i;	
 	for (i = 0; i < rowBuf; i++)
@@ -190,16 +164,9 @@ void parseIntoCommandTable()
 			counter++;
 		}
 	}
+    //terminating command array with NULL
 	command[commandNumber][counter] = NULL;
-	
-	//Assuming max of 10 commands, make structure array that contains 
-	//all possible commands. If less that the max, the forkPipes tells
-	//how many 
-	struct command cmd[] = {command[0], command[1], command[2], command[3],
-							command[4], command[5], command[6], command[7],
-							command[8], command[9]};
-    
+	struct command cmd[] = {command[0], command[1]};	
 	return fork_pipes (numPipes + 1, cmd);
 }
-
 

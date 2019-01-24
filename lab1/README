@@ -1,0 +1,42 @@
+README for p1
+CPSC-3500 WQ2019
+Sam Van Nes // Brigid Kelly
+
+p1 is the implementation of a rudimentary UNIX-style command-line shell
+to test and demonstrate functionality of kernel-level operations such as
+fork(), pipe() and dup2().
+
+To compile:  
+    make p1
+
+To run:  
+    ./p1
+
+Strengths:
+    -Handles all single-line commands and single pipe commands
+    -Is able to parse and tokenize all delimiters proerly
+
+Weaknesses:
+    -currently cannot parse multiple commands if | is not separated by
+        spaces on each side.
+
+
+Issues:
+    -Is not looped so must be re-executed in order to test more commands
+    
+
+
+Team Members: 
+
+    Bri:  
+     Code structuring and functionality for pipe functions, execvp
+     Makefile, README, submission, github setup
+
+    Sam:  
+     Code structuring and functionality for parse function, finalizing 
+            functionality of pipe and dup2 functions.
+     Overall finalizattion of functionality and debugging.
+
+    
+
+

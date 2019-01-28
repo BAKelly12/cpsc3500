@@ -57,28 +57,45 @@ int main()
 	queue<processInfoStruct> orderQueue;
 	
 	//Order them and push
-	for (int i = 0; i < listLength; i++) {
-		for (int j = 0; j < listLength - 1; j++) {
-			if (processList[j].arrival_time > processList[j+1].arrival_time)
-				swap(processList[j], processList[j+1]);
+	
+	int systemTime = 0;
+	int processCounter = 0;
+	while (processCounter != listLength) { //Can be errors here with length
+
+		//Push list ordered by arrival time to the queue
+		for (int i  = 0; i < listLength; i++) {
+			if (processList[i].arrival_time == systemTime)
+			orderQueue.push(processList[i]);
 		}
-	}
-
-	//Push list ordered by arrival time to the queue
-	for (int i = 0; i <  listLength; i++)
-		orderQueue.push(processList[i]);
-
-	//When one second passed...
-	cout << "<system time " << systemTime << "> process " << 
-	orderQueue.front().pid << " is running" << endl;
 	
-	if (orderQueue.front().burst_time == 0) {
-		orderQueue.pop();
-		//cout finishing..
-	}
-	orderQueue.front().burst_time--;
+		if (orderQueue.empty()) { 
+			cout << "<system time " << systemTime << "> Idle... " << endl;
+		} 
 
+		else if (orderQueue.front().burst_time == 0) {
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is finished...." << endl;
+			orderQueue.pop();
+			processCounter++;
+			//Go to next process since the previous is finished
+			if (processCounter == listLength) {
+				cout << "<system time " << systemTime << "> All processes finished" 
+				<< "..............." << endl;
+			} else {
+				cout << "<system time " << systemTime << "> process " << 
+				orderQueue.front().pid << " is running" << endl;
+				orderQueue.front().burst_time--;
+			}
+		} 
 	
+		else {
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
+		}
+		
+		systemTime++;
+	}
 
 
 	/* Open this to see the arrival time order
@@ -91,13 +108,94 @@ int main()
 	// Every second... Need to look into using <crono> or <ctime> for this.
 	
 
+	/*Ordering List
+	while (!completedProcessList) {
+	for (int i = 0; i < listLength; i++) {
+		for (int j = 0; j < listLength - 1; j++) {
+			if (processList[j].arrival_time > processList[j+1].arrival_time)
+				swap(processList[j], processList[j+1]);
+		}
+	}
+	*/
 
 
+	//********************
+	//SRTF
+	//********************
 
+ 
+	queue<processInfoStruct> priorityOrderQueue;
+	
+	//Order them and push
+	
+	systemTime = 0;
+	processCounter = 0;
+	int tempArrayIndex = 0;
+	processInfoStruct tempArray[20];
+	while (processCounter != listLength) { //Can be errors here with length
 
+		//Push list ordered by arrival time to the queue
+		for (int i  = 0; i < listLength; i++) {
+			if (processList[i].arrival_time == systemTime)
+			priorityOrderQueue.push(processList[i]);
+			tempArrayIndex++;
+		}
+
+		for (int i = 0; i < tempArrayIndex; i++) //err possible
+			tempArray[i] = priorityOrderQueue.pop();
+
+		
+	
+		for (int i = 0; i < tempArrayIndex; i++) {
+			for (int j = 0; j < tempArrayIndex - 1; j++) {
+				if (processList[j].burst_time > processList[j+1].burst_time)
+					swap(processList[j], processList[j+1]);
+			}
+		}
+
+		for (int i = 0; i < tempArrayIndex; i++)
+			priorityOrderQueue.push(tempArray[i]);
+
+		if (priorityOrderQueue.empty()) { 
+			cout << "<system time " << systemTime << "> Idle... " << endl;
+		} 
+
+		else if (priorityOrderQueue.front().burst_time == 0) {
+			cout << "<system time " << systemTime << "> process " << 
+			priorityOrderQueue.front().pid << " is finished...." << endl;
+			priorityOrderQueue.pop();
+			processCounter++;
+			//Go to next process since the previous is finished
+			if (processCounter == listLength) {
+				cout << "<system time " << systemTime << "> All processes finished" 
+				<< "..............." << endl;
+			} else {
+				cout << "<system time " << systemTime << "> process " << 
+				priorityOrderQueue.front().pid << " is running" << endl;
+				priorityOrderQueue.front().burst_time--;
+			}
+		} 
+	
+		else {
+			cout << "<system time " << systemTime << "> process " << 
+			priorityOrderQueue.front().pid << " is running" << endl;
+			priorityOrderQueue.front().burst_time--;
+		}
+		
+		systemTime++;
+	}
 
 
 
 	
 
+
+
+
 }
+
+
+
+
+
+

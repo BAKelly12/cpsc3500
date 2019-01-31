@@ -16,6 +16,10 @@
 #include <utility> //for swap()
 using namespace std;
 
+//******************
+//compile stuff
+//*******************
+
 struct processInfoStruct
 {
 	int pid;
@@ -30,6 +34,7 @@ int main()
 	
 	processInfoStruct processList[20];
 	
+	int RRNum = 3;
 	int processIndex = 0;
 	int listLength;
 	int pidNum, arrival_t, burst_t;
@@ -97,73 +102,37 @@ int main()
 		systemTime++;
 	}
 
-
-	/* Open this to see the arrival time order
-	for (int i = 0; i < listLength; i++) {
-		cout << endl << orderQueue.front().arrival_time;
-		orderQueue.pop();
-	}
-	*/
-
-	// Every second... Need to look into using <crono> or <ctime> for this.
-	
-
-	/*Ordering List
-	while (!completedProcessList) {
-	for (int i = 0; i < listLength; i++) {
-		for (int j = 0; j < listLength - 1; j++) {
-			if (processList[j].arrival_time > processList[j+1].arrival_time)
-				swap(processList[j], processList[j+1]);
-		}
-	}
-	*/
-
-
 	//********************
 	//SRTF
 	//********************
 
- 
-	queue<processInfoStruct> priorityOrderQueue;
-	
-	//Order them and push
-	
+ 	//Order them and push
+	/*	
 	systemTime = 0;
 	processCounter = 0;
-	int tempArrayIndex = 0;
-	processInfoStruct tempArray[20];
+	processInfoStruct = shortestTimeRemaining[20];
+	//Order them and push
 	while (processCounter != listLength) { //Can be errors here with length
 
 		//Push list ordered by arrival time to the queue
 		for (int i  = 0; i < listLength; i++) {
 			if (processList[i].arrival_time == systemTime)
-			priorityOrderQueue.push(processList[i]);
-			tempArrayIndex++;
+				shortestTimeRemaining[..] = processList[i];
 		}
-
-		for (int i = 0; i < tempArrayIndex; i++) //err possible
-			tempArray[i] = priorityOrderQueue.pop();
-
-		
 	
-		for (int i = 0; i < tempArrayIndex; i++) {
-			for (int j = 0; j < tempArrayIndex - 1; j++) {
-				if (processList[j].burst_time > processList[j+1].burst_time)
-					swap(processList[j], processList[j+1]);
-			}
-		}
+		************
+		// make the priority queue here 
+		************	
+				
 
-		for (int i = 0; i < tempArrayIndex; i++)
-			priorityOrderQueue.push(tempArray[i]);
-
-		if (priorityOrderQueue.empty()) { 
+		if (orderQueue.empty()) { 
 			cout << "<system time " << systemTime << "> Idle... " << endl;
 		} 
 
-		else if (priorityOrderQueue.front().burst_time == 0) {
+		else if (shortestTimeRemaining[0].burst_time == 0) {
 			cout << "<system time " << systemTime << "> process " << 
-			priorityOrderQueue.front().pid << " is finished...." << endl;
-			priorityOrderQueue.pop();
+			shortestTimeRemaining[0] << " is finished...." << endl;
+			shortestTimeRemaining[0].burst_time = -1;
 			processCounter++;
 			//Go to next process since the previous is finished
 			if (processCounter == listLength) {
@@ -171,26 +140,74 @@ int main()
 				<< "..............." << endl;
 			} else {
 				cout << "<system time " << systemTime << "> process " << 
-				priorityOrderQueue.front().pid << " is running" << endl;
-				priorityOrderQueue.front().burst_time--;
+				orderQueue.front().pid << " is running" << endl;
+				orderQueue.front().burst_time--;
 			}
 		} 
 	
 		else {
 			cout << "<system time " << systemTime << "> process " << 
-			priorityOrderQueue.front().pid << " is running" << endl;
-			priorityOrderQueue.front().burst_time--;
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
 		}
 		
 		systemTime++;
 	}
+	*/
 
-
-
+	//********************
+	//RR
+	//********************	
 	
+	//Order them and push	
+	systemTime = 0;
+	processCounter = 0;
+	processInfoStruct tempHolder;
+	while (processCounter != listLength) { //Can be errors here with length
 
+		//Push list ordered by arrival time to the queue
+		for (int i  = 0; i < listLength; i++) {
+			if (processList[i].arrival_time == systemTime)
+			orderQueue.push(processList[i]);
+		}
 
+		//Push pid in front of the queue to the back	
+		if (systemTime % RRNum == 0) {
+			tempHolder.pid = orderQueue.front().pid;
+			tempHolder.arrival_time = orderQueue.front().arrival_time;
+			tempHolder.burst_time = orderQueue.front().burst_time;
+			orderQueue.pop();
+			orderQueue.push(tempHolder);
+		}
+		
+		if (orderQueue.empty()) { 
+			cout << "<system time " << systemTime << "> Idle... " << endl;
+		} 
 
+		else if (orderQueue.front().burst_time == 0) {
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is finished...." << endl;
+			orderQueue.pop();
+			processCounter++;
+			//Go to next process since the previous is finished
+			if (processCounter == listLength) {
+				cout << "<system time " << systemTime << "> All processes finished" 
+				<< "..............." << endl;
+			} else {
+				cout << "<system time " << systemTime << "> process " << 
+				orderQueue.front().pid << " is running" << endl;
+				orderQueue.front().burst_time--;
+			}
+		} 
+	
+		else {
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
+		}
+		
+		systemTime++;
+	}
 
 }
 

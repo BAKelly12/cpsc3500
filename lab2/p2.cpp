@@ -7,6 +7,12 @@
  * @see "Seattle University CPSC3500 Winter 2019"
  */
 
+/**
+ * TODO:
+ *      1. STATS
+ *      2. ARG PARSING/TAKING INPUT & ASSOCIATED LOGIC
+ *      3. COMMENTS
+ */
 
 #include <fstream>
 #include <string>
@@ -26,14 +32,18 @@ struct processInfoStruct
 	int burst_time;
 }; 
 
+/**
+ *@brief comparison function for sort<processInfoStruct>
+ *@param a:  lhs from sort comp output arg
+ *		b:  rhs from sort comp output arg
+ *@return lhs arrived earlier than rhs
+ */
 bool pl_comp(const processInfoStruct &a, const processInfoStruct &b)
 {
 	return a.arrival_time < b.arrival_time;
 }
 
-/**
- * Function Declarations
- */
+/** Function Declarations */
 void fcfs(processInfoStruct processList[], int listLength);
 void roundRobin(processInfoStruct processList[], int listLength, int quantum);
 void srtf(processInfoStruct processList[], int listLength);
@@ -197,6 +207,7 @@ void srtf(processInfoStruct processList[], int listLength)
 		systemTime++;
 	}		
 }//end of func signature
+
 
 void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 {

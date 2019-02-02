@@ -103,7 +103,7 @@ int main()
 	int processIndex = 0;
 	int listLength;
 	int pidNum, arrival_t, burst_t;
-	int quantum = 2;
+	//int quantum = 2;
 	while (!inFile.eof())
 	{
 		inFile >> pidNum >> arrival_t >> burst_t;
@@ -127,9 +127,9 @@ int main()
 	//put logic here for choosing which algorithm to use
 		//and then all we have to do is call function with arg process list
 		
-	//fcfs(processList, listLength);	
+	fcfs(processList, listLength);	
 	//srtf(processList, listLength);
-	roundRobin(processList, listLength, quantum);
+	//roundRobin(processList, listLength, quantum);
 	return 0;
 
 }//end of main signature
@@ -149,8 +149,9 @@ void fcfs(processInfoStruct processList[], int listLength)
 		//Push list ordered by arrival time to the queue
 		for (int i  = 0; i < listLength; i++) 
 		{
-			if (processList[i].arrival_time == systemTime)
+			if (processList[i].arrival_time == systemTime) {
 			orderQueue.push(processList[i]);
+			}
 		}
 	
 		if (orderQueue.empty()) 
@@ -162,6 +163,7 @@ void fcfs(processInfoStruct processList[], int listLength)
 		{
 			cout << "<system time " << systemTime << "> process " << 
 			orderQueue.front().pid << " is finished...." << endl;
+			stats.turnTimes.push_back(systemTime - orderQueue.front().arrival_time);
 			orderQueue.pop();
 			processCounter++;
 			//Go to next process since the previous is finished
@@ -172,20 +174,37 @@ void fcfs(processInfoStruct processList[], int listLength)
 			} 
 			else 
 			{
-				cout << "<system time " << systemTime << "> process " << 
-				orderQueue.front().pid << " is running" << endl;
-				orderQueue.front().burst_time--;
+				//New process is on, push info
+				stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
+				stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
 			}
-		} 
-	
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
+		}
 		else 
 		{
+			//Bad loop, but basically checks to see if this is process one and returns info.
+			for (int i = 0; i < listLength; i++) 
+				{
+					if (processList[i].pid == orderQueue.front().pid) 
+					{
+						if (processList[i].burst_time == orderQueue.front().burst_time)
+						{
+							stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
+							stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
+						}
+					} 
+				}	
 			cout << "<system time " << systemTime << "> process " << 
 			orderQueue.front().pid << " is running" << endl;
 			orderQueue.front().burst_time--;
 		}
 		systemTime++;
 	}
+	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
+	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
+	cout << "Average response time: " << stats.getAvgResp() <<"\n";
 }//end of fcfs signature
 
 void srtf(processInfoStruct processList[], int listLength)
@@ -251,6 +270,9 @@ void srtf(processInfoStruct processList[], int listLength)
 		}		
 		systemTime++;
 	}		
+	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
+	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
+	cout << "Average response time: " << stats.getAvgResp() <<"\n";
 }//end of func signature
 
 
@@ -272,6 +294,8 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 				{
 					cout<<"<System time "<<systemTime<<"> Process "<<ps[i].pid<<" is running.\n";
 					ps[i].burst_time--;
+					
+					
 					systemTime++;
 					if(0 == ps[i].burst_time)
 					{
@@ -295,6 +319,10 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 				systemTime++;				
 		}		
 	}
+
+	
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
+	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
+	cout << "Average response time: " << stats.getAvgResp() <<"\n";
 }
 

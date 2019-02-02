@@ -2,7 +2,7 @@
  * @file p2.cpp - Simulation of 3 CPU scheduling algorithms:
  *                  1.  First Come First Serve
  *                  2.  Shortest Time Remaining First
- *                  3.  Round Robin
+ *                  3.  Round Robin fix
  * @authors Brigid Kelly / Sam Van Nes
  * @see "Seattle University CPSC3500 Winter 2019"
  */
@@ -31,6 +31,51 @@ struct processInfoStruct
 	int arrival_time;
 	int burst_time;
 }; 
+
+
+struct stats
+{
+	
+	int cpUsage;
+	double avgTurn, avgWait, avgResp;
+	stats(): cpUsage(0), avgTurn(0), avgWait(0), avgResp(0) {} 	
+	vector<int> respTimes;
+	vector<int> waitTimes;
+	vector<int> turnTimes;
+	
+	double getAvgTurn()
+	{
+		size_t vsz = turnTimes.size();
+		int sum(0);
+		for(size_t i(0);i<vsz;i++)
+			sum+=turnTimes[i];
+		avgTurn = sum/vsz;
+		return avgTurn;
+	}
+	
+	double getAvgWait()
+	{
+		size_t vsz = waitTimes.size();
+		int sum(0);
+		for(size_t i(0);i<vsz;i++)
+			sum+=waitTimes[i];
+		avgWait = sum/vsz;
+		return avgWait;
+	}
+	
+	double getAvgResp()
+	{
+		size_t vsz = respTimes.size();
+		int sum(0);
+		for(size_t i(0);i<vsz;i++)
+			sum+=respTimes[i];
+		avgResp = sum/vsz;
+		
+		return avgResp;
+	}	
+};//end of stat structure
+
+stats stats;
 
 /**
  *@brief comparison function for sort<processInfoStruct>
@@ -87,7 +132,7 @@ int main()
 	roundRobin(processList, listLength, quantum);
 	return 0;
 
-}
+}//end of main signature
 
 void fcfs(processInfoStruct processList[], int listLength)
 {
@@ -141,7 +186,7 @@ void fcfs(processInfoStruct processList[], int listLength)
 		}
 		systemTime++;
 	}
-}
+}//end of fcfs signature
 
 void srtf(processInfoStruct processList[], int listLength)
 {	
@@ -211,43 +256,26 @@ void srtf(processInfoStruct processList[], int listLength)
 
 void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 {
-	vector<processInfoStruct> rrq;
-	int systemTime(0), finished(0);
-	processInfoStruct curProc;
-	
-	for(int i = 0; i<listLength; i++)
-	{
-		rrq.push_back(ps[i]);
-	}
-	sort(rrq.begin(), rrq.end(), pl_comp);
-		
 
-/* take off front, when done running, place at end of queue */
+	size_t arlen = sizeof(ps)/sizeof(ps[0]);
+	if((size_t)listLength != arlen)
+		throw("Array size mismatch");
+	
+	int first(0);
+	sort(ps, ps+listLength, pl_comp);
+	int finished(0);
 	while(finished < listLength)
 	{
-		curProc = *rrq.begin();
-		rrq.erase(rrq.begin() );
-		if(rrq.empty() && finished != listLength -1)
-			cout<< "<System time " << systemTime << ">" << " Idle..\n";
-		
-		for(int i = 0; i < quantum; i++)
+		for(int i=first; i<listLength;i++)
 		{
-			cout<< "<System time " << systemTime << ">" << " Process " << curProc.pid << " is running.\n";
-			curProc.burst_time--;
-		/* process  finished? */
-			if(0 == curProc.burst_time)
-			{
-				cout<< "<System time " << systemTime << ">"<< " Process " << curProc.pid << " is finished..\n";
-				finished++;
-				break;
-			}
-		}
-	/* if not finished, put back in queue */
-		if(0 != curProc.burst_time)
-			rrq.push_back(curProc);
-		
-		systemTime++;
-	}
+			
+			
+			
+	
+	
+	
+
+
 }
 
 

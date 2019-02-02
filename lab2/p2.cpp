@@ -257,25 +257,37 @@ void srtf(processInfoStruct processList[], int listLength)
 void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 {
 
-	size_t arlen = sizeof(ps)/sizeof(ps[0]);
-	if((size_t)listLength != arlen)
-		throw("Array size mismatch");
-	
-	int first(0);
+	//size_t arlen = sizeof(ps)/sizeof(ps[0]);
+	//if((size_t)listLength != arlen)
+		//throw("Array size mismatch");
+		
 	sort(ps, ps+listLength, pl_comp);
-	int finished(0);
+	int finished(0), systemTime(0);
 	while(finished < listLength)
 	{
-		for(int i=first; i<listLength;i++)
+		for(size_t i=0; i<(size_t)listLength;i++)
 		{
-			
-			
-			
-	
-	
-	
-
-
+			if(ps[i].arrival_time <= systemTime && ps[i].burst_time>0){
+				for(int j = 0; j<quantum;j++)
+				{
+					cout<<"<System time "<<systemTime<<"> Process "<<ps[i].pid<<" is running.\n";
+					ps[i].burst_time--;
+					if(0 == ps[i].burst_time)
+					{
+						finished++;
+						ps[i].burst_time = -1;
+						cout<<"<System time "<<systemTime<<"> Process "<<ps[i].pid<<" is finished....\n";
+						stats.turnTimes.push_back(systemTime - ps[i].arrival_time);
+						break;
+					}
+					
+				}
+			}
+			else if(ps[i].arrival_time > systemTime)
+				break;
+		}
+		systemTime++;
+	}
+	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 }
-
 

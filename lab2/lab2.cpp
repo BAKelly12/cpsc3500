@@ -44,16 +44,21 @@ void srtf(processInfoStruct processList[], int listLength);
 
 int main(int argc, char** argv)
 {
-	string INPUT_FILE = "testData.txt";
-	//string INPUT_FILE = (char*)argv[0];
-	ifstream inFile(INPUT_FILE.c_str());
-	
+	if (argc > 1) {
+		vector<string> INPUT_FILE;
+		string INPUT_FILE(argv[1]);
+		ifstream inFile(INPUT_FILE);
+	} else {
+		cout << "Invalid command" << endl;
+		break;
+	}
+
 	processInfoStruct processList[20];
 	
 	int processIndex = 0;
 	int listLength;
 	int pidNum, arrival_t, burst_t;
-	//int quantum = 2;
+	
 	while (!inFile.eof())
 	{
 		inFile >> pidNum >> arrival_t >> burst_t;

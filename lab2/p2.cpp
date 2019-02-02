@@ -1,25 +1,23 @@
 /**
-*@file: lab2.cpp - Cpu scheduling algos with comments (rough draft)
-*@authors:  Brigid Kelly/Sam Van Nes
-*@see "Seattle University CPSC3500 Winter 2019"
-*/
+ * @file p2.cpp - Simulation of 3 CPU scheduling algorithms:
+ *                  1.  First Come First Serve
+ *                  2.  Shortest Time Remaining First
+ *                  3.  Round Robin
+ * @authors Brigid Kelly / Sam Van Nes
+ * @see "Seattle University CPSC3500 Winter 2019"
+ */
 
 
 #include <fstream>
 #include <string>
 #include <queue>
 #include <iostream>
-#include <utility> //for swap()
+#include <utility> 
 #include <algorithm>
-#include <map> // creating the pcb
-#include <vector> //for srtf
-
+#include <map> 
+#include <vector> 
 
 using namespace std;
-
-//******************
-//compile stuff
-//*******************
 
 struct processInfoStruct
 {
@@ -33,9 +31,8 @@ bool pl_comp(const processInfoStruct &a, const processInfoStruct &b)
 	return a.arrival_time < b.arrival_time;
 }
 
-
 /**
- *Function Declarations
+ * Function Declarations
  */
 void fcfs(processInfoStruct processList[], int listLength);
 void roundRobin(processInfoStruct processList[], int listLength, int quantum);
@@ -63,6 +60,7 @@ int main()
 	listLength = processIndex - 1;
 	
 	inFile.close();
+	
 	for (int i = 0; i < listLength; i++) 
 	{
 		cout << "processnum: " << processList[i].pid << endl;
@@ -77,8 +75,8 @@ int main()
 	//fcfs(processList, listLength);	
 	//srtf(processList, listLength);
 	roundRobin(processList, listLength, quantum);
-	
-	return 1;
+	return 0;
+
 }
 
 void fcfs(processInfoStruct processList[], int listLength)
@@ -92,16 +90,19 @@ void fcfs(processInfoStruct processList[], int listLength)
 	int processCounter = 0;
 	while (processCounter != listLength) 
 	{ //Can be errors here with length
+
 		//Push list ordered by arrival time to the queue
 		for (int i  = 0; i < listLength; i++) 
 		{
 			if (processList[i].arrival_time == systemTime)
 			orderQueue.push(processList[i]);
-		}	
+		}
+	
 		if (orderQueue.empty()) 
 		{ 
 			cout << "<system time " << systemTime << "> Idle... " << endl;
 		} 
+
 		else if (orderQueue.front().burst_time == 0) 
 		{
 			cout << "<system time " << systemTime << "> process " << 
@@ -120,7 +121,8 @@ void fcfs(processInfoStruct processList[], int listLength)
 				orderQueue.front().pid << " is running" << endl;
 				orderQueue.front().burst_time--;
 			}
-		} 	
+		} 
+	
 		else 
 		{
 			cout << "<system time " << systemTime << "> process " << 
@@ -138,56 +140,50 @@ void srtf(processInfoStruct processList[], int listLength)
 	int finished = 0;
 	vector<pair<int,processInfoStruct>> tempq;
 	pair<int, processInfoStruct> nextToRun;
-		
 	while(finished < listLength)
-	{
-		//find arrival times that match system time and place in queue
+	{		
+	/*	Check for new arrivals	*/
 		for (int i  = 0; i < listLength; i++) 
 		{
 			if (processList[i].arrival_time == systemTime)
 				rq[processList[i].pid] = processList[i];
 		}
 		
-		//print idle if readyqueue is empty
 		if(rq.empty())
 			cout<< "Idle..\n";
-		else //rq isnt empty, find shortest time
+		else 
 		{
 			for(auto &it: rq)
 			{
-				//check case if we are at start of q
-				if(it.first == rq.begin()->first)//this is checking pid's
+			/* Get lowest burst time */
+				if(it.first == rq.begin()->first)
 				{
 					nextToRun = it;
 				}
-				else // check rest against nextToRun and if lower burst times replace nextToRun
+				else
 				{				
 					if(rq[it.first].burst_time < rq[nextToRun.first].burst_time)
 						nextToRun = it;						
 				}
 			}
-		}//minimum burst time has been found		
-		//now need to check for duplicate burst times and then compare arrival times
+		}	
+	/* If duplicate bt, fcfs */
 		for(auto &it: rq)
 		{
 			if(rq[it.first].burst_time == rq[nextToRun.first].burst_time)
 				tempq.push_back(it);
 		}		
-		//all common burst times have been placed in tempq
-		if(tempq.size() > 1)//do this only if we actually have multiple common burst times
-		{
-			//FIRST COME FIRST SERVE
+		if(tempq.size() > 1)
+		{			
 			for(auto &it: tempq)
 			{
 				if(rq[it.first].arrival_time < rq[nextToRun.first].arrival_time)
-					nextToRun = it;
-				
+					nextToRun = it;	
 			}
-		}//we now have the first to arrive with the shortest burst time
-		
-		tempq.clear();//memory management
-		
-		//LETS RUN THE PROCESS 
+		}		
+		tempq.clear();
+				
+	/* Run Process */
 		cout<< "<system time "<< systemTime << ">";
 		cout<< "Process " << rq[nextToRun.first].pid << " is running\n";
 		rq[nextToRun.first].burst_time--;
@@ -198,11 +194,9 @@ void srtf(processInfoStruct processList[], int listLength)
 			rq.erase(nextToRun.first);
 			finished++;
 		}		
-		//I love object oriented programming 8)
 		systemTime++;
-	}//end of while loop		
+	}		
 }//end of func signature
-
 
 void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 {
@@ -216,8 +210,8 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 	}
 	sort(rrq.begin(), rrq.end(), pl_comp);
 		
-	//processes now sorted by arrival time
-	
+
+/* take off front, when done running, place at end of queue */
 	while(finished < listLength)
 	{
 		curProc = *rrq.begin();
@@ -229,6 +223,7 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 		{
 			cout<< "<System time " << systemTime << ">" << " Process " << curProc.pid << " is running.\n";
 			curProc.burst_time--;
+		/* process  finished? */
 			if(0 == curProc.burst_time)
 			{
 				cout<< "<System time " << systemTime << ">"<< " Process " << curProc.pid << " is finished..\n";
@@ -236,10 +231,12 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 				break;
 			}
 		}
-		
+	/* if not finished, put back in queue */
 		if(0 != curProc.burst_time)
 			rrq.push_back(curProc);
 		
 		systemTime++;
 	}
 }
+
+

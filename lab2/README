@@ -1,0 +1,29 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Weaknesses:
+            SRTF does not place first element from list into queue before entering main
+                algorithm loop.  This is an unneeded check and could cause branch
+                misses and cpu cycle loss, especially when iterating over large amounts of data.
+               
+                 It also has a-for loop to find next process to queue.  This could be significant
+                as it will cause algorithm to approach order  O(n^2) as opposed to O(nlogn) 
+
+
+
+            
+             

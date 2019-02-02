@@ -272,6 +272,7 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 				{
 					cout<<"<System time "<<systemTime<<"> Process "<<ps[i].pid<<" is running.\n";
 					ps[i].burst_time--;
+					systemTime++;
 					if(0 == ps[i].burst_time)
 					{
 						finished++;
@@ -284,9 +285,15 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 				}
 			}
 			else if(ps[i].arrival_time > systemTime)
+			{
+				cout<<"<System time "<<systemTime<<"> Idle..\n";
+				systemTime++;
 				break;
-		}
-		systemTime++;
+			}
+			else
+				cout<<"<System time "<<systemTime<<"> Idle..\n";
+				systemTime++;				
+		}		
 	}
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 }

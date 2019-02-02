@@ -9,6 +9,7 @@
 #include <string>
 #include <queue>
 #include <iostream>
+#include <cstring>
 #include <utility> //for swap()
 #include <algorithm>
 #include <map> // creating the pcb
@@ -41,9 +42,10 @@ void fcfs(processInfoStruct processList[], int listLength);
 void roundRobin(processInfoStruct processList[], int listLength, int quantum);
 void srtf(processInfoStruct processList[], int listLength);
 
-int main()
+int main(int argc, char** argv)
 {
 	string INPUT_FILE = "testData.txt";
+	//string INPUT_FILE = (char*)argv[0];
 	ifstream inFile(INPUT_FILE.c_str());
 	
 	processInfoStruct processList[20];
@@ -51,7 +53,7 @@ int main()
 	int processIndex = 0;
 	int listLength;
 	int pidNum, arrival_t, burst_t;
-	int quantum = 2;
+	//int quantum = 2;
 	while (!inFile.eof())
 	{
 		inFile >> pidNum >> arrival_t >> burst_t;
@@ -74,10 +76,26 @@ int main()
 	//put logic here for choosing which algorithm to use
 		//and then all we have to do is call function with arg process list
 		
-	//fcfs(processList, listLength);	
-	//srtf(processList, listLength);
-	roundRobin(processList, listLength, quantum);
 	
+	cout << "type: " << argv[2] << endl << endl;
+	//fcfs(processList, listLength);
+
+	
+	if (argc == 3) {
+		if (strcmp(argv[2], "FCFS"))
+			fcfs(processList, listLength);	
+		else if (strcmp(argv[2], "SRTF"))
+			srtf(processList, listLength);
+		else {
+			cout << "Invalid command." << endl;
+		}
+	} else if (argc == 4) {
+			roundRobin(processList, listLength, atoi(argv[3]));
+	} else {
+		cout << endl << "You didn't enter a proper scheduling algorithm." << endl;
+	}
+	
+
 	return 1;
 }
 

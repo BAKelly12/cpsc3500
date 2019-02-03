@@ -37,8 +37,8 @@ struct processInfoStruct
 struct stats
 {
 	
-	int idleTimes = 0;
- 	int systemTimes;
+
+
 	double avgTurn, avgWait, avgResp, cpUsage;
 	stats(): avgTurn(0), avgWait(0), avgResp(0), cpUsage(0) {} 	
 	vector<int> respTimes;
@@ -76,10 +76,6 @@ struct stats
 		return avgResp;
 	}
 
-	double getCPUusage()
-	{
-		return (((systemTimes - idleTimes)/systemTimes) * 100);
-	}
 	
 };//end of stat structure
 
@@ -280,7 +276,6 @@ void srtf(processInfoStruct processList[], int listLength)
 		}		
 		systemTime++;
 	}		
-	cout << "CPU usage: " << stats.getCPUusage() << "\n";
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
@@ -306,7 +301,8 @@ void roundRobin(processInfoStruct processList[], int listLength, int quantum)
 			orderQueue.push(processList[i]);
 			}
 		}
-	
+
+		// Push to back of list	
 		if (systemTime % quantum == 0)
 		{
 			tempHold.pid = orderQueue.front().pid;
@@ -317,7 +313,9 @@ void roundRobin(processInfoStruct processList[], int listLength, int quantum)
 			cin.get();
 		}
 
-
+		cout << orderQueue.front().pid << "burst time:" << orderQueue.front().burst_time;
+	
+		//The following is the same as FCFS
 		if (orderQueue.empty()) 
 		{ 
 			cout << "<system time " << systemTime << "> Idle... " << endl;
@@ -336,31 +334,16 @@ void roundRobin(processInfoStruct processList[], int listLength, int quantum)
 				cout << "<system time " << systemTime << "> All processes finished" 
 				<< "..............." << endl;
 				break;	
-			} 
-			else 
-			{
+			}  
 				//New process is on, push info
-				stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
-				stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
-			}
 			cout << "<system time " << systemTime << "> process " << 
 			orderQueue.front().pid << " is running" << endl;
 			orderQueue.front().burst_time--;
+			
 		}
 		else 
 		{
 			//Bad loop, but basically checks to see if this is process one and returns info.
-			for (int i = 0; i < listLength; i++) 
-				{
-					if (processList[i].pid == orderQueue.front().pid) 
-					{
-						if (processList[i].burst_time == orderQueue.front().burst_time)
-						{
-							stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
-
-						}
-					} 
-				}	
 			cout << "<system time " << systemTime << "> process " << 
 			orderQueue.front().pid << " is running" << endl;
 			orderQueue.front().burst_time--;
@@ -372,6 +355,6 @@ void roundRobin(processInfoStruct processList[], int listLength, int quantum)
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
-	stats.systemTimes = systemTime;	
+		
 }
 

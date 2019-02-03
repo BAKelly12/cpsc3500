@@ -30,19 +30,21 @@ struct processInfoStruct
 	int pid;
 	int arrival_time;
 	int burst_time;
+	bool activated = false;
 }; 
 
 
 struct stats
 {
 	
-	int cpUsage;
-	double avgTurn, avgWait, avgResp;
-	stats(): cpUsage(0), avgTurn(0), avgWait(0), avgResp(0) {} 	
+	int idleTimes = 0;
+ 	int systemTimes;
+	double avgTurn, avgWait, avgResp, cpUsage;
+	stats(): avgTurn(0), avgWait(0), avgResp(0), cpUsage(0) {} 	
 	vector<int> respTimes;
 	vector<int> waitTimes;
 	vector<int> turnTimes;
-	
+
 	double getAvgTurn()
 	{
 		size_t vsz = turnTimes.size();
@@ -72,7 +74,13 @@ struct stats
 		avgResp = sum/vsz;
 		
 		return avgResp;
-	}	
+	}
+
+	double getCPUusage()
+	{
+		return (((systemTimes - idleTimes)/systemTimes) * 100);
+	}
+	
 };//end of stat structure
 
 stats stats;
@@ -103,7 +111,7 @@ int main()
 	int processIndex = 0;
 	int listLength;
 	int pidNum, arrival_t, burst_t;
-	//int quantum = 2;
+	int quantum = 2;
 	while (!inFile.eof())
 	{
 		inFile >> pidNum >> arrival_t >> burst_t;
@@ -127,9 +135,9 @@ int main()
 	//put logic here for choosing which algorithm to use
 		//and then all we have to do is call function with arg process list
 		
-	fcfs(processList, listLength);	
+	//fcfs(processList, listLength);	
 	//srtf(processList, listLength);
-	//roundRobin(processList, listLength, quantum);
+	roundRobin(processList, listLength, quantum);
 	return 0;
 
 }//end of main signature
@@ -278,24 +286,33 @@ void srtf(processInfoStruct processList[], int listLength)
 
 void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 {
-
-	//size_t arlen = sizeof(ps)/sizeof(ps[0]);
-	//if((size_t)listLength != arlen)
-		//throw("Array size mismatch");
-		
+	
 	sort(ps, ps+listLength, pl_comp);
-	int finished(0), systemTime(0);
+	int finished(0), systemTime(0), waitCount(0);
 	while(finished < listLength)
 	{
 		for(size_t i=0; i<(size_t)listLength;i++)
-		{
+		{	
+			//Go through and see how many active processes there are (for waitTime)
+			for (size_t i = 0; i < (size_t)listLength; i++){
+				if(ps[i].arrival_time <= systemTime && ps[i].burst_time>0){
+					waitCount++;
+				}
+			}
+
+			//Check to see if element has been touched/altered yet. (for respTime)
+			if (ps[i].activated == false) {
+				ps[i].activated = true;
+				stats.respTimes.push_back(systemTime);
+			}
+
 			if(ps[i].arrival_time <= systemTime && ps[i].burst_time>0){
+				
 				for(int j = 0; j<quantum;j++)
 				{
 					cout<<"<System time "<<systemTime<<"> Process "<<ps[i].pid<<" is running.\n";
 					ps[i].burst_time--;
-					
-					
+					stats.waitTimes.push_back(waitCount - 1 - finished);
 					systemTime++;
 					if(0 == ps[i].burst_time)
 					{
@@ -311,16 +328,20 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 			else if(ps[i].arrival_time > systemTime)
 			{
 				cout<<"<System time "<<systemTime<<"> Idle..\n";
+				stats.idleTimes++;
 				systemTime++;
 				break;
 			}
-			else
+			else{
 				cout<<"<System time "<<systemTime<<"> Idle..\n";
+				stats.idleTimes++;
 				systemTime++;				
+			}
 		}		
 	}
+	stats.systemTimes = systemTime;	
 
-	
+	cout << "CPU usage: " << stats.getCPUusage() << "\n";
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";

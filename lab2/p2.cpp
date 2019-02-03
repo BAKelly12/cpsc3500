@@ -113,26 +113,55 @@ void srtf(processInfoStruct processList[], int listLength);
 *************************************/
 int main(int argc, char** argv)
 {	
-	string input[argc];
-	for(int i(0);i<argc;i++)
-	{
-		input[i] = argv[i];
-	}
-	string filename;
-	string algo;
-	int quantum(0);
+	int processIndex = 0;
+	int listLength;
+	int pidNum, arrival_t, burst_t;
+	processInfoStruct processList[20];
 	
-	if(argc == 4)
-	{
-		filename = input[1];
-		algo = input[2];
-		quantum = stoi(input[3]);
-		if()
-			throw("Invalid input, see README for how to format 4 argument inputs. \n");		
-	}
-	cout << filename <<" "<<algo <<" " <<quantum<<" \n";
+	//Get the file from the command line
+	string INPUT_FILE(argv[1]);
+	ifstream inFile(INPUT_FILE);
 
+	//Load into array
+	while (!inFile.eof())
+	{
+		inFile >> pidNum >> arrival_t >> burst_t;
+		processList[processIndex].pid = pidNum;
+		processList[processIndex].arrival_time = arrival_t;
+		processList[processIndex].burst_time = burst_t;
+		processIndex++;	
+	}
+	listLength = processIndex - 1;
 	
+	inFile.close();
+	
+	//Check to see which algorithm was selected	
+	if (argc == 3) {
+		if ((strcmp(argv[2], "FCFS")) == 0) {
+			cout << "\n" << "Scheduling algorithm: FCFS \n";
+			cout << "Total of " << listLength << " tasks are read from input file."
+			<< " Press 'enter' to start. \n";
+			cin.get();
+			fcfs(processList, listLength);	
+		} else if ((strcmp(argv[2], "SRTF") == 0)) {
+			cout << "\n" << "Scheduling algorithm: SRTF \n";
+			cout << "Total of " << listLength << " tasks are read from input file."
+			<< " Press 'enter' to start. \n";
+			cin.get();
+			srtf(processList, listLength);
+		} else {
+			cout << "Invalid command." << endl;
+		}
+	} else if (argc == 4) {
+			cout << "\n" << "Scheduling algorithm: RR \n";
+			cout << "Total of " << listLength << " tasks are read from input file."
+			<< " You selected a quantum time of " << atoi(argv[3]) << 
+			". Press 'enter' to start. \n";
+			cin.get();
+			roundRobin(processList, listLength, atoi(argv[3]));
+	} else {
+		cout << endl << "You didn't enter a proper scheduling algorithm." << endl;
+	}
 }
 
 /*************************************
@@ -165,6 +194,7 @@ void fcfs(processInfoStruct processList[], int listLength)
 		if (orderQueue.empty()) 
 		{ 
 			cout << "<system time " << systemTime << "> Idle... " << endl;
+			
 		} 
 
 		else if (orderQueue.front().burst_time == 0) 
@@ -210,11 +240,14 @@ void fcfs(processInfoStruct processList[], int listLength)
 			orderQueue.front().burst_time--;
 		}
 		systemTime++;
+	
 	}
-	//cout << "CPU usage: " << stats.getCPUusage() << "\n";
+	stats.cpUsage = systemTime;
+	printf("\nFirst Come First Serve Results: \n");
+	printf("\nTotal CPU utilization:  %5.2f%c.\n", stats.getCpUtilzation(systemTime),percent);
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
-	cout << "Average response time: " << stats.getAvgResp() <<"\n";
+	cout << "Average response time: " << stats.getAvgResp() <<"\n\n\n\n";
 }//end of fcfs signature
 
  /*************************************

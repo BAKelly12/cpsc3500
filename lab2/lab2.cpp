@@ -266,3 +266,79 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 		systemTime++;
 	}
 }
+
+
+
+/** SAMS ROUND ROBIN 
+
+	queue<processInfoStruct> orderQueue;
+	
+	//Order them and push
+	processInfoStruct tempHold;
+	int systemTime = 0;
+	int processCounter = 0;
+	while (processCounter != listLength) 
+	{ //Can be errors here with length
+
+		//Push list ordered by arrival time to the queue
+		for (int i  = 0; i < listLength; i++) 
+		{
+			if (processList[i].arrival_time == systemTime) {
+			orderQueue.push(processList[i]);
+			}
+		}
+
+		// Push to back of list	
+		if (systemTime % quantum == 0)
+		{
+			tempHold.pid = orderQueue.front().pid;
+			tempHold.arrival_time = orderQueue.front().arrival_time;
+			tempHold.burst_time = orderQueue.front().burst_time;
+			orderQueue.pop();
+			orderQueue.push(tempHold);
+			cin.get();
+		}
+
+		cout << orderQueue.front().pid << "burst time:" << orderQueue.front().burst_time;
+	
+		//The following is the same as FCFS
+		if (orderQueue.empty()) 
+		{ 
+			cout << "<system time " << systemTime << "> Idle... " << endl;
+		} 
+
+		else if (orderQueue.front().burst_time <= 0) 
+		{
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is finished...." << endl;
+			stats.turnTimes.push_back(systemTime - orderQueue.front().arrival_time);
+			orderQueue.pop();
+			processCounter++;
+			//Go to next process since the previous is finished
+			if (processCounter == listLength) 
+			{
+				cout << "<system time " << systemTime << "> All processes finished" 
+				<< "..............." << endl;
+				break;	
+			}  
+				//New process is on, push info
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
+			
+		}
+		else 
+		{
+			//Bad loop, but basically checks to see if this is process one and returns info.
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
+		}
+		systemTime++;
+	}
+	
+	//cout << "CPU usage: " << stats.getCPUusage() << "\n";
+	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
+	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
+	cout << "Average response time: " << stats.getAvgResp() <<"\n";
+		*/

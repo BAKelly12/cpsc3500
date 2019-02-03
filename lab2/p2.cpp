@@ -7,23 +7,20 @@
  * @see "Seattle University CPSC3500 Winter 2019"
  */
 
-/**
- * TODO:
- *      2. COMMENTS
- */
-
 #include <fstream>
-#include <string>
+#include <string.h>
 #include <queue>
 #include <iostream>
 #include <utility> 
 #include <map>      //for pcb management
 #include <vector>  //for queue manipulation
 #include <iomanip>  //For precision output
+#include <algorithm> //for command line parse
 
 using namespace std;
 
 static const char percent = '%';
+
 
 /* PCB */
 struct processInfoStruct
@@ -41,6 +38,10 @@ struct processInfoStruct
 }; 
 
 
+/*
+ *@struct stats - Container for placing all gathered statistical 
+ *				in functions to perform calculations.
+ */				
 struct stats
 {
 	
@@ -88,7 +89,6 @@ struct stats
 	}
 	
 };//end of stat structure
-
 stats stats;
 
 /**
@@ -102,7 +102,7 @@ bool pl_comp(const processInfoStruct &a, const processInfoStruct &b)
 	return a.arrival_time < b.arrival_time;
 }
 
-/** Function Declarations */
+/** Scheduler Algorithm Function Declarations */
 void fcfs(processInfoStruct processList[], int listLength);
 void roundRobin(processInfoStruct processList[], int listLength, int quantum);
 void srtf(processInfoStruct processList[], int listLength);
@@ -111,53 +111,37 @@ void srtf(processInfoStruct processList[], int listLength);
 /************************************
 *             MAIN BODY             *
 *************************************/
-int main()
-{
-	string INPUT_FILE = "testData.txt";
-	ifstream inFile(INPUT_FILE.c_str());
-	
-	processInfoStruct processList[20];
-	
-	int processIndex = 0;
-	int listLength;
-	int pidNum, arrival_t, burst_t;
-	//int quantum = 2;
-	while (!inFile.eof())
+int main(int argc, char** argv)
+{	
+	string input[argc];
+	for(int i(0);i<argc;i++)
 	{
-		inFile >> pidNum >> arrival_t >> burst_t;
-		processList[processIndex].pid = pidNum;
-		processList[processIndex].arrival_time = arrival_t;
-		processList[processIndex].burst_time = burst_t;
-		processIndex++;	
+		input[i] = argv[i];
 	}
-	listLength = processIndex - 1;
+	string filename;
+	string algo;
+	int quantum(0);
 	
-	inFile.close();
-	
-	for (int i = 0; i < listLength; i++) 
+	if(argc == 4)
 	{
-		cout << "processnum: " << processList[i].pid << endl;
-		cout << "arrival_t: " << processList[i].arrival_time << endl;
-		cout << "burst_t: " << processList[i].burst_time << endl;
-		cout << endl << endl;
+		filename = input[1];
+		algo = input[2];
+		quantum = stoi(input[3]);
+		if()
+			throw("Invalid input, see README for how to format 4 argument inputs. \n");		
 	}
+	cout << filename <<" "<<algo <<" " <<quantum<<" \n";
 
-	//put logic here for choosing which algorithm to use
-		//and then all we have to do is call function with arg process list
-		
-	//fcfs(processList, listLength);	
-	srtf(processList, listLength);
-	//roundRobin(processList, listLength, quantum);
-	return 0;
-
-}//end of main signature
-
+	
+}
 
 /*************************************
  *       SCHEDULING FUNCTIONS        *
  ************************************/
  
- 
+ /******************************
+  *   FIRST COME FIRST SERVE	*
+  ******************************/
 void fcfs(processInfoStruct processList[], int listLength)
 {
 	
@@ -200,8 +184,8 @@ void fcfs(processInfoStruct processList[], int listLength)
 			else 
 			{
 				//New process is on, push info
-				//stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
-				//stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
+				stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
+				stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
 			}
 			cout << "<system time " << systemTime << "> process " << 
 			orderQueue.front().pid << " is running" << endl;
@@ -216,8 +200,8 @@ void fcfs(processInfoStruct processList[], int listLength)
 					{
 						if (processList[i].burst_time == orderQueue.front().burst_time)
 						{
-							//stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
-							//stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
+							stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
+							stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
 						}
 					} 
 				}	
@@ -233,7 +217,9 @@ void fcfs(processInfoStruct processList[], int listLength)
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
 }//end of fcfs signature
 
-
+ /*************************************
+  *   SHORTEST TIME REMAINING FIRST	  *
+  *************************************/
 void srtf(processInfoStruct ps[], int listLength)
 {	
 	int systemTime = 0;
@@ -356,8 +342,9 @@ void srtf(processInfoStruct ps[], int listLength)
 	
 }//end of func signature
 
-
-
+ /******************************
+  *       ROUND ROBIN	      *
+  ******************************/
 void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 {
 	int sysTime(0);

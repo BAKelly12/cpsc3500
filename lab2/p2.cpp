@@ -210,6 +210,7 @@ void fcfs(processInfoStruct processList[], int listLength)
 		}
 		systemTime++;
 	}
+	cout << "CPU usage: " << stats.getCPUusage() << "\n";
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
@@ -278,6 +279,7 @@ void srtf(processInfoStruct processList[], int listLength)
 		}		
 		systemTime++;
 	}		
+	cout << "CPU usage: " << stats.getCPUusage() << "\n";
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
@@ -297,16 +299,17 @@ void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 			for (size_t i = 0; i < (size_t)listLength; i++){
 				if(ps[i].arrival_time <= systemTime && ps[i].burst_time>0){
 					waitCount++;
+				if (ps[i].activated == false) {
+					ps[i].activated = true;
+					stats.respTimes.push_back(systemTime);
+				}
 				}
 			}
 
 			//Check to see if element has been touched/altered yet. (for respTime)
-			if (ps[i].activated == false) {
-				ps[i].activated = true;
-				stats.respTimes.push_back(systemTime);
-			}
 
 			if(ps[i].arrival_time <= systemTime && ps[i].burst_time>0){
+				
 				
 				for(int j = 0; j<quantum;j++)
 				{

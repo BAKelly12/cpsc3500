@@ -9,9 +9,7 @@
 
 /**
  * TODO:
- *      1. STATS
- *      2. ARG PARSING/TAKING INPUT & ASSOCIATED LOGIC
- *      3. COMMENTS
+ *      2. COMMENTS
  */
 
 #include <fstream>
@@ -19,26 +17,33 @@
 #include <queue>
 #include <iostream>
 #include <utility> 
-#include <algorithm>
-#include <map> 
-#include <vector> 
+#include <map>      //for pcb management
+#include <vector>  //for queue manipulation
+#include <iomanip>  //For precision output
 
 using namespace std;
 
+static const char percent = '%';
+
+/* PCB */
 struct processInfoStruct
-{
-	int pid;
-	int arrival_time;
-	int burst_time;
+{	
+	int pid=0;
+	int arrival_time=0;
+	int burst_time=0;
+	int respT=0;
+	int waitT=0;
+	int cpuT=0;
+	int turnT=0;
+	bool running = false;
 	bool activated = false;
+	bool done = false;	
 }; 
 
 
 struct stats
 {
 	
-
-
 	double avgTurn, avgWait, avgResp, cpUsage;
 	stats(): avgTurn(0), avgWait(0), avgResp(0), cpUsage(0) {} 	
 	vector<int> respTimes;
@@ -51,7 +56,7 @@ struct stats
 		int sum(0);
 		for(size_t i(0);i<vsz;i++)
 			sum+=turnTimes[i];
-		avgTurn = sum/vsz;
+		avgTurn = (double)sum/(double)vsz;
 		return avgTurn;
 	}
 	
@@ -61,7 +66,7 @@ struct stats
 		int sum(0);
 		for(size_t i(0);i<vsz;i++)
 			sum+=waitTimes[i];
-		avgWait = sum/vsz;
+		avgWait = (double)sum/(double)vsz;
 		return avgWait;
 	}
 	
@@ -71,11 +76,16 @@ struct stats
 		int sum(0);
 		for(size_t i(0);i<vsz;i++)
 			sum+=respTimes[i];
-		avgResp = sum/vsz;
-		
+		avgResp = (double)sum/(double)vsz;
 		return avgResp;
+	}	
+	
+	double getCpUtilzation(int sysTime)
+	{
+		double out = (double)cpUsage / (double)sysTime;
+		out = out*100;
+		return out;
 	}
-
 	
 };//end of stat structure
 
@@ -97,6 +107,10 @@ void fcfs(processInfoStruct processList[], int listLength);
 void roundRobin(processInfoStruct processList[], int listLength, int quantum);
 void srtf(processInfoStruct processList[], int listLength);
 
+
+/************************************
+*             MAIN BODY             *
+*************************************/
 int main()
 {
 	string INPUT_FILE = "testData.txt";
@@ -107,7 +121,7 @@ int main()
 	int processIndex = 0;
 	int listLength;
 	int pidNum, arrival_t, burst_t;
-	int quantum = 2;
+	//int quantum = 2;
 	while (!inFile.eof())
 	{
 		inFile >> pidNum >> arrival_t >> burst_t;
@@ -132,12 +146,18 @@ int main()
 		//and then all we have to do is call function with arg process list
 		
 	//fcfs(processList, listLength);	
-	//srtf(processList, listLength);
-	roundRobin(processList, listLength, quantum);
+	srtf(processList, listLength);
+	//roundRobin(processList, listLength, quantum);
 	return 0;
 
 }//end of main signature
 
+
+/*************************************
+ *       SCHEDULING FUNCTIONS        *
+ ************************************/
+ 
+ 
 void fcfs(processInfoStruct processList[], int listLength)
 {
 	
@@ -213,44 +233,66 @@ void fcfs(processInfoStruct processList[], int listLength)
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
 }//end of fcfs signature
 
-void srtf(processInfoStruct processList[], int listLength)
+
+void srtf(processInfoStruct ps[], int listLength)
 {	
 	int systemTime = 0;
 	map<int, processInfoStruct> rq;
 	int finished = 0;
 	vector<pair<int,processInfoStruct>> tempq;
 	pair<int, processInfoStruct> nextToRun;
+	bool doNotIdle = false;
 	while(finished < listLength)
-	{		
+	{	
+
 	/*	Check for new arrivals	*/
 		for (int i  = 0; i < listLength; i++) 
 		{
-			if (processList[i].arrival_time == systemTime)
-				rq[processList[i].pid] = processList[i];
+			if (ps[i].arrival_time == systemTime)
+			{
+				rq[ps[i].pid] = ps[i];
+				rq[ps[i].pid].activated = true;
+			}
 		}
 		
-		if(rq.empty())
+	/* Check if any active processes, change flag accordingly */
+		for(auto &it: rq)
+		{
+			if(rq[it.first].activated && !rq[it.first].done)
+			{
+				doNotIdle = true;
+				break;
+			}
+		}
+		
+	/* Idle output for empty queue */
+		if(!doNotIdle)
 			cout<< "Idle..\n";
 		else 
 		{
+	/* Find lowest burst time */	
 			for(auto &it: rq)
-			{
-			/* Get lowest burst time */
+			{	
 				if(it.first == rq.begin()->first)
 				{
 					nextToRun = it;
 				}
 				else
-				{				
-					if(rq[it.first].burst_time < rq[nextToRun.first].burst_time)
+				{	
+					int irburst = rq[it.first].burst_time - rq[it.first].cpuT;
+					int nrburst = rq[nextToRun.first].burst_time - rq[nextToRun.first].cpuT;
+					if(irburst < nrburst && !rq[it.first].done)
 						nextToRun = it;						
 				}
 			}
 		}	
+		int nrburst = rq[nextToRun.first].burst_time - rq[nextToRun.first].cpuT;	
+	
 	/* If duplicate bt, fcfs */
 		for(auto &it: rq)
 		{
-			if(rq[it.first].burst_time == rq[nextToRun.first].burst_time)
+			int irburst = rq[it.first].burst_time - rq[it.first].cpuT;
+			if(irburst == nrburst)
 				tempq.push_back(it);
 		}		
 		if(tempq.size() > 1)
@@ -262,99 +304,140 @@ void srtf(processInfoStruct processList[], int listLength)
 			}
 		}		
 		tempq.clear();
-				
-	/* Run Process */
+
+/* Run Process */
 		cout<< "<system time "<< systemTime << ">";
 		cout<< "Process " << rq[nextToRun.first].pid << " is running\n";
-		rq[nextToRun.first].burst_time--;
+		rq[nextToRun.first].running = true;
 		
-		if(rq[nextToRun.first].burst_time == 0)
+	/* If this is first time running, record response time */
+		if(!rq[nextToRun.first].cpuT)
 		{
-			cout<< "Process " << rq[nextToRun.first].pid << " is finished...\n";	
-			rq.erase(nextToRun.first);
+			rq[nextToRun.first].respT = systemTime - rq[nextToRun.first].arrival_time;
+		}
+		
+		/* increment cputime */	
+		rq[nextToRun.first].cpuT++;
+		
+		/* Tell others to wait */
+		for(auto &itr: rq)
+		{
+			if(rq[itr.first].activated && !rq[itr.first].done && !rq[itr.first].running)
+				rq[itr.first].waitT++;
+		}
+	
+	/* Check for job completion */
+		if(rq[nextToRun.first].cpuT == rq[nextToRun.first].burst_time)
+		{
+			cout<<"<system time " << systemTime << "> Process " << rq[nextToRun.first].pid;
+			cout << " is finished...\n";	
+			rq[nextToRun.first].done = true;
+			rq[nextToRun.first].turnT = systemTime - rq[nextToRun.first].arrival_time;
 			finished++;
-		}		
+		}
+		rq[nextToRun.first].running = false;
 		systemTime++;
-	}		
-	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
-	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
-	cout << "Average response time: " << stats.getAvgResp() <<"\n";
+	}	
+
+/* Stat Collection */
+	for(auto &it: rq)
+	{
+		stats.waitTimes.push_back(rq[it.first].waitT);
+		stats.respTimes.push_back(rq[it.first].respT);
+		stats.turnTimes.push_back(rq[it.first].turnT);
+		stats.cpUsage+=rq[it.first].cpuT;
+	}
+	
+	printf("\nShortest Remaining Time First Results: \n");
+	printf("\nTotal CPU utilization:  %5.2f%c.\n", stats.getCpUtilzation(systemTime),percent);
+	printf("Average wait time: %6.2f.\n",  stats.getAvgWait());
+	printf("Average response time: %5.2f.\n", stats.getAvgResp());
+	printf("Average turnaround time: %6.2f.\n\n\n\n",stats.getAvgTurn());
+	
 }//end of func signature
 
 
-void roundRobin(processInfoStruct processList[], int listLength, int quantum)
+
+void roundRobin(processInfoStruct ps[], int listLength, int quantum)
 {
+	int sysTime(0);
+	int finished(0);
+	bool doNotIdle = false;
 	
-	queue<processInfoStruct> orderQueue;
+	map<int, processInfoStruct> rrq;
 	
-	//Order them and push
-	processInfoStruct tempHold;
-	int systemTime = 0;
-	int processCounter = 0;
-	while (processCounter != listLength) 
-	{ //Can be errors here with length
-
-		//Push list ordered by arrival time to the queue
-		for (int i  = 0; i < listLength; i++) 
+/* Populate dictionary */
+	for(int i = 0; i<listLength;i++)
+	{
+		rrq[ps[i].pid] = ps[i];	
+	}	
+	while(finished < listLength)
+	{//main loop	
+		for(auto &it: rrq)//this is to go through all items in map
 		{
-			if (processList[i].arrival_time == systemTime) {
-			orderQueue.push(processList[i]);
-			}
-		}
-
-		// Push to back of list	
-		if (systemTime % quantum == 0)
-		{
-			tempHold.pid = orderQueue.front().pid;
-			tempHold.arrival_time = orderQueue.front().arrival_time;
-			tempHold.burst_time = orderQueue.front().burst_time;
-			orderQueue.pop();
-			orderQueue.push(tempHold);
-			cin.get();
-		}
-
-		cout << orderQueue.front().pid << "burst time:" << orderQueue.front().burst_time;
-	
-		//The following is the same as FCFS
-		if (orderQueue.empty()) 
-		{ 
-			cout << "<system time " << systemTime << "> Idle... " << endl;
-		} 
-
-		else if (orderQueue.front().burst_time <= 0) 
-		{
-			cout << "<system time " << systemTime << "> process " << 
-			orderQueue.front().pid << " is finished...." << endl;
-			stats.turnTimes.push_back(systemTime - orderQueue.front().arrival_time);
-			orderQueue.pop();
-			processCounter++;
-			//Go to next process since the previous is finished
-			if (processCounter == listLength) 
+		/* Check arrival time and check completion status */
+			if(rrq[it.first].arrival_time <= sysTime && !rrq[it.first].done) 
 			{
-				cout << "<system time " << systemTime << "> All processes finished" 
-				<< "..............." << endl;
-				break;	
-			}  
-				//New process is on, push info
-			cout << "<system time " << systemTime << "> process " << 
-			orderQueue.front().pid << " is running" << endl;
-			orderQueue.front().burst_time--;
-			
-		}
-		else 
+			/*  Running the process */
+				rrq[it.first].running = true;
+				cout<< "<System Time " << sysTime << "> Process "<< it.first << " running.  \n";
+				doNotIdle = true;
+				for(int i = 0 ; i<quantum;i++)//if arrived, run the process for quantum
+				{
+				/* if this is the first time, set to active and record response time */
+					if(!rrq[it.first].activated)
+					{
+						rrq[it.first].activated = true;
+						rrq[it.first].respT = sysTime - rrq[it.first].arrival_time;
+					}					
+					rrq[it.first].cpuT++;//increment cputime
+					sysTime++;//increment sysTime
+					
+				/* Incrememnted sysTime, all activated processes not running increment wait time */
+					for(auto &itr: rrq)
+					{
+						if(rrq[itr.first].activated && !rrq[itr.first].done && !rrq[itr.first].running)
+							rrq[itr.first].waitT++;
+					}
+						
+				/* if its run for total burst time flag as done and record turnaround */
+					if(rrq[it.first].cpuT == rrq[it.first].burst_time)
+					{
+						rrq[it.first].done = true;
+						rrq[it.first].turnT = sysTime - rrq[it.first].arrival_time;
+						finished++;
+						cout<< "<System Time " << sysTime << "> Process "<< it.first << " finished..\n";
+					}
+				/* move on if process is done */
+					if(rrq[it.first].done)
+						break;
+					
+				}//end of running section	
+			/* Interrupt, flag as waiting */
+				rrq[it.first].running = false;
+			}
+		}//end of map iteration
+		if(!doNotIdle)
 		{
-			//Bad loop, but basically checks to see if this is process one and returns info.
-			cout << "<system time " << systemTime << "> process " << 
-			orderQueue.front().pid << " is running" << endl;
-			orderQueue.front().burst_time--;
-		}
-		systemTime++;
+			sysTime++;
+			cout<< "<System Time " << sysTime <<"> Idle..\n";
+		}			
+		/* Reset idle flag */
+		doNotIdle = false;
+	}//end of main while loop sig
+/* Compile stats */
+	for(auto &it: rrq)
+	{
+		stats.respTimes.push_back(rrq[it.first].respT);
+		stats.waitTimes.push_back(rrq[it.first].waitT);
+		stats.turnTimes.push_back(rrq[it.first].turnT);
+		stats.cpUsage+=rrq[it.first].cpuT;
 	}
 	
-	//cout << "CPU usage: " << stats.getCPUusage() << "\n";
-	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
-	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
-	cout << "Average response time: " << stats.getAvgResp() <<"\n";
-		
-}
+	printf("\nRound Robin Results: \n");
+	printf("\nTotal CPU utilization:  %5.2f%c.\n", stats.getCpUtilzation(sysTime),percent);
+	printf("Average wait time: %6.2f.\n",  stats.getAvgWait());
+	printf("Average response time: %5.2f.\n", stats.getAvgResp());
+	printf("Average turnaround time: %6.2f.\n\n\n\n",stats.getAvgTurn());
 
+}//end of function signature

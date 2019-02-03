@@ -179,12 +179,13 @@ void fcfs(processInfoStruct processList[], int listLength)
 			{
 				cout << "<system time " << systemTime << "> All processes finished" 
 				<< "..............." << endl;
+				break;	
 			} 
 			else 
 			{
 				//New process is on, push info
-				stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
-				stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
+				//stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
+				//stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
 			}
 			cout << "<system time " << systemTime << "> process " << 
 			orderQueue.front().pid << " is running" << endl;
@@ -199,8 +200,8 @@ void fcfs(processInfoStruct processList[], int listLength)
 					{
 						if (processList[i].burst_time == orderQueue.front().burst_time)
 						{
-							stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
-							stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
+							//stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
+							//stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
 						}
 					} 
 				}	
@@ -210,7 +211,7 @@ void fcfs(processInfoStruct processList[], int listLength)
 		}
 		systemTime++;
 	}
-	cout << "CPU usage: " << stats.getCPUusage() << "\n";
+	//cout << "CPU usage: " << stats.getCPUusage() << "\n";
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
@@ -286,67 +287,91 @@ void srtf(processInfoStruct processList[], int listLength)
 }//end of func signature
 
 
-void roundRobin(processInfoStruct ps[], int listLength, int quantum)
+void roundRobin(processInfoStruct processList[], int listLength, int quantum)
 {
 	
-	sort(ps, ps+listLength, pl_comp);
-	int finished(0), systemTime(0), waitCount(0);
-	while(finished < listLength)
-	{
-		for(size_t i=0; i<(size_t)listLength;i++)
-		{	
-			//Go through and see how many active processes there are (for waitTime)
-			for (size_t i = 0; i < (size_t)listLength; i++){
-				if(ps[i].arrival_time <= systemTime && ps[i].burst_time>0){
-					waitCount++;
-				if (ps[i].activated == false) {
-					ps[i].activated = true;
-					stats.respTimes.push_back(systemTime);
-				}
-				}
-			}
+	queue<processInfoStruct> orderQueue;
+	
+	//Order them and push
+	processInfoStruct tempHold;
+	int systemTime = 0;
+	int processCounter = 0;
+	while (processCounter != listLength) 
+	{ //Can be errors here with length
 
-			//Check to see if element has been touched/altered yet. (for respTime)
-
-			if(ps[i].arrival_time <= systemTime && ps[i].burst_time>0){
-				
-				
-				for(int j = 0; j<quantum;j++)
-				{
-					cout<<"<System time "<<systemTime<<"> Process "<<ps[i].pid<<" is running.\n";
-					ps[i].burst_time--;
-					stats.waitTimes.push_back(waitCount - 1 - finished);
-					systemTime++;
-					if(0 == ps[i].burst_time)
-					{
-						finished++;
-						ps[i].burst_time = -1;
-						cout<<"<System time "<<systemTime<<"> Process "<<ps[i].pid<<" is finished....\n";
-						stats.turnTimes.push_back(systemTime - ps[i].arrival_time);
-						break;
-					}
-					
-				}
+		//Push list ordered by arrival time to the queue
+		for (int i  = 0; i < listLength; i++) 
+		{
+			if (processList[i].arrival_time == systemTime) {
+			orderQueue.push(processList[i]);
 			}
-			else if(ps[i].arrival_time > systemTime)
+		}
+	
+		if (systemTime % quantum == 0)
+		{
+			tempHold.pid = orderQueue.front().pid;
+			tempHold.arrival_time = orderQueue.front().arrival_time;
+			tempHold.burst_time = orderQueue.front().burst_time;
+			orderQueue.pop();
+			orderQueue.push(tempHold);
+			cin.get();
+		}
+
+
+		if (orderQueue.empty()) 
+		{ 
+			cout << "<system time " << systemTime << "> Idle... " << endl;
+		} 
+
+		else if (orderQueue.front().burst_time <= 0) 
+		{
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is finished...." << endl;
+			stats.turnTimes.push_back(systemTime - orderQueue.front().arrival_time);
+			orderQueue.pop();
+			processCounter++;
+			//Go to next process since the previous is finished
+			if (processCounter == listLength) 
 			{
-				cout<<"<System time "<<systemTime<<"> Idle..\n";
-				stats.idleTimes++;
-				systemTime++;
-				break;
+				cout << "<system time " << systemTime << "> All processes finished" 
+				<< "..............." << endl;
+				break;	
+			} 
+			else 
+			{
+				//New process is on, push info
+				stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
+				stats.waitTimes.push_back(systemTime - orderQueue.front().arrival_time);
 			}
-			else{
-				cout<<"<System time "<<systemTime<<"> Idle..\n";
-				stats.idleTimes++;
-				systemTime++;				
-			}
-		}		
-	}
-	stats.systemTimes = systemTime;	
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
+		}
+		else 
+		{
+			//Bad loop, but basically checks to see if this is process one and returns info.
+			for (int i = 0; i < listLength; i++) 
+				{
+					if (processList[i].pid == orderQueue.front().pid) 
+					{
+						if (processList[i].burst_time == orderQueue.front().burst_time)
+						{
+							stats.respTimes.push_back(systemTime - orderQueue.front().arrival_time);
 
-	cout << "CPU usage: " << stats.getCPUusage() << "\n";
+						}
+					} 
+				}	
+			cout << "<system time " << systemTime << "> process " << 
+			orderQueue.front().pid << " is running" << endl;
+			orderQueue.front().burst_time--;
+		}
+		systemTime++;
+	}
+	
+	//cout << "CPU usage: " << stats.getCPUusage() << "\n";
 	cout << "Average turnaround time: " << stats.getAvgTurn() <<"\n";
 	cout << "Average wait time: " << stats.getAvgWait() <<"\n";
 	cout << "Average response time: " << stats.getAvgResp() <<"\n";
+	stats.systemTimes = systemTime;	
 }
 

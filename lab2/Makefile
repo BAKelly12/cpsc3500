@@ -15,7 +15,7 @@ p2_tar:
 	tar -cvf  p2.tar README p2.cpp testData.txt Makefile 
 
 p2_submit: 
-	/home/fac/zhuy/class/SubmitHW/submit3500 p2 p2.tar
+	/home/fac/zhuy/class/SubmitHW/submit3500    p2_late   p2.tar
 
 
 

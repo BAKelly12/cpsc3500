@@ -1,29 +1,56 @@
+README for p2
+CPSC-3500 WQ2019
 
+p2 is a simulation of 3 well-known CPU scheduling algorithms.  SHORTEST TIME REMAINING FIRST,
+FIRST COME FIRST SERVE, and ROUND ROBIN.  It utilizes multiple data structures to manage 
+statistical data and queuing.  
 
+To compile:
+	make p2
+	
+	IMPORTANT NOTE:  Due to the use of auto typcasted iterators / range-based loops, c++11
+						or higher must be used to compile.  This is included in the arguments
+						of the make command.
+	
+to run:
+	./p1 <Input file> {FCFS | SRTF | RR}  {IF RR -> <quantum time>}
 
+to add to .tar:
+	make p2_tar
+	
+to submit:
+	make p2_submit
+	
+	
+Strengths:
+	Heavily object oriented code allows for easy access to all statisitical information
+	on each PID by accessing the maps defined in each function using processID as a key.
+	
+	Code is very modular and could be adapted for use in later programs.
+	
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+Issues:  
+	Completes all tasks in proper order and at simulated proper system time but average 
+	statistical response , turnaround and waiting times do not equal the example outputs 
+	in assignment description (slightly lower, ~6%).
+	
+	
 Weaknesses:
-            SRTF does not place first element from list into queue before entering main
-                algorithm loop.  This is an unneeded check and could cause branch
-                misses and cpu cycle loss, especially when iterating over large amounts of data.
-               
-                 It also has a-for loop to find next process to queue.  This could be significant
-                as it will cause algorithm to approach order  O(n^2) as opposed to O(nlogn) 
+    SRTF does not place first element from list into queue before entering main
+		algorithm loop.  This is an unneeded check and could cause branch
+        misses and cpu cycle loss, especially when iterating over large amounts of data.
+      
+    Multiple loops are used to find to find next processes to queue/run.  This could be 
+		cause significant overhead in very large input datasets as it will cause algorithm 
+		to approach order  O(n^2) as opposed to O(nlogn) if inputs were inserted in order via
+		binary search / insertion sort.
+
+	Code is lengthy and could have been better designed by placing each function/object in 
+		its own class or creating a template queue class with children for each algorithm prescibed.
+
+Team Members & contributions:
+	Brigid Kelly:  Object oriented portions of code, statistical analysis struct, SRTF, RR.
+	Sam VanNes:  Main arg parsing & logic, file operations, FCFS, general debugging, output formatting
 
 
-
-            
-             
+  

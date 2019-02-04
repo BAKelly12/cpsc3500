@@ -9,18 +9,17 @@
 
 #include <fstream>
 #include <string.h>
-#include <queue>
+#include <queue>     //FCFS Handling
 #include <iostream>
-#include <utility> 
-#include <map>      //for pcb management
-#include <vector>  //for queue manipulation
+#include <utility>   //for swap()
+#include <map>      //for pcb management (SRTF/RR)
+#include <vector>   //for queue manipulation
 #include <iomanip>  //For precision output
-#include <algorithm> //for command line parse
+//#include <algorithm> //for command line parse
 
 using namespace std;
 
 static const char percent = '%';
-
 
 /* PCB */
 struct processInfoStruct
@@ -89,7 +88,7 @@ struct stats
 	}
 	
 };//end of stat structure
-stats stats;
+stats stats;  //global object instantiation.
 
 /**
  *@brief comparison function for sort<processInfoStruct>

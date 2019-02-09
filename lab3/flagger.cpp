@@ -7,8 +7,6 @@
   
   
 #include "flagger.h"
-#include <semaphore.h>
-#include <iostream>
 using namespace std; 
   
 flagger::flagger(const void* (*ca)(void* args), string tln){

@@ -1,34 +1,34 @@
 /**
  *@file: flagger.h - Header file for flagger class -- Basic thread manager
+                      //Abstraction of semaphore
   *@Author: Brigid Kelly
   *@See:  "Seattle University CPSC 3500 Winter 2019"
   */
   
-//#include <ctime>
+
 #include <time.h>
-#include <queue>
+#include <vector>
 #include <fstream>
 #include <pthread.h>
 #include <semaphore.h>
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <mutex>
   
 #pragma once
-  
-#define FLAGGER_LOG_FILENAME "flagger.log"
-  
+ 
 class flagger{
     
 public:
     
-/*Specific Constructor*/
-     flagger(void* (*ca)(void *args), std::string tln);
-     
+/*Specific Constructors*/
+     flagger(void* (*ca)(void *args), std::string fln, std::string tln, char dir);
+     flagger(void* (*ca)(void *args), std::string fln, std::string tln);
      
 /**  Big Six **/
       flagger() = delete;
-      ~flagger()= default;
+      ~flagger();
       flagger(const flagger& other) = default;
       flagger(flagger&& temp) = default;
 	    flagger& operator=(const flagger& other) = default;
@@ -37,23 +37,50 @@ public:
 /** Member Functions **/
 
       //getters
+      int getw();
       int getp();
-      int getc();
       
+
       //Setters
-      void* addc();
-      void* addp();
+      int fLog_init();
+      int tLog_init();
+      
+      void* make_t(int num);
 
       //Go commands
-      void* consume();
-      void* produce();
+      void* post();
+      void* wait();
+      int sleep(int seconds);
+      void* create();
+      void* join();
       
 
 private:
-    
-  
- /** Private Member Functions **/
+
+/**Private Member Variables**/
+
+      std::string tLogFilePath;
+      std::string fLogFilePath;
+
+      int waiting;
+      int tid;
+      std::vector<pthread_t> consQ;
+      std::vector<pthread_t> prodQ;
+      
+      void* (*critSect)(void* args);
+      char direction;
+      sem_t sem;
+      pthread_t consTest;
+      
+      bool tlog_enable;
+      bool flog_enable;
+      bool tLogHasHeader;
+      bool fLogHasHeader;
+
+
+/** Private Member Functions **/
  
+
   std::string getTime()
   {
     std::time_t tanD = std::time(nullptr);
@@ -62,56 +89,53 @@ private:
     strftime(buff, sizeof(buff), "%H:%M:%S", sTm);   
     std::string now(buff);   
     return now; 
+  } 
+
+
+/**Functions for logging */
+
+  inline void fLog( std::string logMsg )
+  {
+
+    std::string now = getTime();
+    
+    std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
+    ofs << now << '\t' << logMsg << std::endl;
+    ofs.close();
   }
 
-  
-  /**Private Member Variables**/
+  inline void tLog( std::string logMsg )
+  {
 
-  /**under construction**
-    
-    
-      struct threadInfo{//have each car fill out a small questionaire
-    
-     
-      };
-      
-      */  
- 
-      std::string tlog;
-      
-      std::queue<pthread_t> consQ;
-      std::queue<pthread_t> prodQ;
-      
-      void* (*critSect)(void* args);
-      
-      
-      sem_t producer;
-      sem_t consumer;
-      
-      
-    
-      
-
-inline void fLog( std::string logMsg ){
-
-    std::string filePath = (std::string)FLAGGER_LOG_FILENAME;
-    std::cout << (std::string)FLAGGER_LOG_FILENAME<<"\t";
     std::string now = getTime();
     
     std::cout << logMsg << "\n";
-    std::ofstream ofs(filePath, std::ios_base::out | std::ios_base::app );
-    ofs << now << '\t' << logMsg << '\n';
+    std::ofstream ofs(tLogFilePath, std::ios_base::out | std::ios_base::app );
+    ofs << now << '\t' << logMsg << std::endl;
     ofs.close();
-}
+  }
+  
+  void* flog_header(){
+    
+      std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
+      ofs<<"Time \t\t\t State"<<std::endl;
+      ofs.close();
+      fLogHasHeader = true;
+    return NULL;
+  }
+
+  void* tlog_header(){
+  
+    std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
+    ofs<<"Time \t\t\t State"<<std::endl;
+    ofs.close();
+    tLogHasHeader = true;
+
+  return NULL;
+  
+  }
 
 
-/**
-inline void tLogger( string logMsg ){
- 
-    string now = getTime();
-    ofstream ofs(tlog.c_str(), std::ios_base::out | std::ios_base::app );
-    ofs << now << '\t' << logMsg << '\n';
-    ofs.close();
-}
-*/
-};//end class declaration
+
+
+};//end of class definition

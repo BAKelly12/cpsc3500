@@ -21,7 +21,7 @@ int main(int argc, char** argv){
   cout << "Flag pre: " << flag<<"\n";
   
   flagger.create();
-  
+  flagger.sleep(2);
   flagger.join();
   
   cout<< "Flag post: "<<flag<<"\n";

@@ -14,13 +14,13 @@ flagger::flagger(void* (*ca)(void* args), string fln, string tln){
   tLogFilePath = tln;
   critSect = ca;  
   sem_init(&sem, 0, 0);
-  string buff = getTime();  
   direction = ' ';
   fLogFilePath = fln;
-  tlog_enable = true;
-  flog_enable = true;
+  fLog_init();
+  tLog_init(); 
   tLogHasHeader = false;
   fLogHasHeader = false;  
+  threadsInMotion = false;
 }
 
 
@@ -29,13 +29,13 @@ flagger::flagger(void* (*ca)(void* args), string fln, string tln, char dir){
   tLogFilePath = tln;
   critSect = ca;  
   sem_init(&sem, 0, 0);
-  string buff = getTime();  
-  direction = toupper(dir);
+  direction = ' ';
   fLogFilePath = fln;
-  tlog_enable = true;
-  flog_enable = true;
+  fLog_init();
+  tLog_init(); 
   tLogHasHeader = false;
-  fLogHasHeader = false;
+  fLogHasHeader = false; 
+  threadsInMotion = false;
   
 }
 
@@ -43,47 +43,69 @@ flagger::~flagger(){
   sem_destroy(&sem);
 }
 
-int flagger::fLog_init(){
-  if(!fLogHasHeader){
-    flog_header();
-    return 1;
-  }else
-    return -1;
-}
-
-int flagger::tLog_init(){
-  if(!tLogHasHeader){
-    tlog_header();
-    return 1;
-  }else
-    return -1; 
-}
-
-
-void* flagger::create(){
-
-   pthread_create (&consTest, NULL, critSect, NULL);
-   return NULL;
-   
-}
-
-void* flagger::wait(){//wait
+void* flagger::make_t(int num){
+  if(!threadsInMotion)
+    T_Q.resize(num);
+  else
+    cerr << "Cannot change thread queue size while threads are open\n";
+  return NULL;
   
+}
+
+void* flagger::push_t(){
+  
+  if(!threadsInMotion)
+    T_Q.resize(T_Q.size() + 1 );
+  else
+    cerr << "Cannot change thread queue size while threads are open\n";
+  
+  return NULL;
+}
+void* flagger::pop_t(){
+  
+  if(!threadsInMotion)
+    T_Q.pop_back(); 
+  else
+    cerr << "Cannot change thread queue size while threads are open\n";
+  
+  return NULL;
+}
+  
+
+void* flagger::create_t(){
+  
+  if(!threadsInMotion){ 
+    for(size_t i(0); i<T_Q.size(); i++)
+      pthread_create(&T_Q[i], NULL, critSect, NULL); 
+    
+    threadsInMotion = true;    
+  }
+  else
+    cerr << "Cannot create more threads while threads are in motion";
+  
+  return NULL; 
+}
+
+void* flagger::wait(){
+  //log arrival time here
   ++waiting;
   sem_wait(&sem);
 
 	return NULL;
 }
 
-void* flagger::post(){//post
-
+void* flagger::post(){
+  //log critical section entry time here
   sem_post(&sem);
+  --waiting;
  
 	return NULL;
 }
 
 void* flagger::join(){ 
-  pthread_join (consTest, NULL);
+
+  for(size_t i(0); i<T_Q.size(); i++)
+    pthread_join(T_Q[i], NULL); 
   //logging for vehicle exit here
   
   return NULL;
@@ -129,4 +151,3 @@ int flagger::sleep(int seconds){
   return pthread_cond_timedwait(&conditionvar, &mutex, &timetoexpire);
  
 } 
-  

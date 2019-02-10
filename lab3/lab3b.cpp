@@ -20,7 +20,8 @@ int main(int argc, char** argv){
 
   cout << "Flag pre: " << flag<<"\n";
   
-  flagger.create();
+  
+  flagger.make_t(1);
   flagger.sleep(2);
   flagger.join();
   

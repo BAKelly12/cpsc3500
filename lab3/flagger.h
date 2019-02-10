@@ -16,7 +16,7 @@
   
 #pragma once
   
-#define FLAGGER_LOG_FILENAME "~/cpsc3500/lab3/flagger.log"
+#define FLAGGER_LOG_FILENAME "flagger.log"
   
 class flagger{
     
@@ -92,14 +92,14 @@ private:
     
       
 
-inline void fLogger( std::string logMsg ){
+inline void fLog( std::string logMsg ){
 
     std::string filePath = (std::string)FLAGGER_LOG_FILENAME;
     std::cout << (std::string)FLAGGER_LOG_FILENAME<<"\t";
     std::string now = getTime();
     
- 
-    std::ofstream ofs(filePath.c_str(), std::ios_base::out | std::ios_base::app );
+    std::cout << logMsg << "\n";
+    std::ofstream ofs(filePath, std::ios_base::out | std::ios_base::app );
     ofs << now << '\t' << logMsg << '\n';
     ofs.close();
 }

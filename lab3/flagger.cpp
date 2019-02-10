@@ -20,7 +20,7 @@ flagger::flagger(void* (*ca)(void* args), string tln){
   string buff = getTime();
   
   printf("%s %s\n", buff.c_str(), "Flagger on scene\n");
-  fLogger("Awake");
+  fLog("Awake");
 
 
 }

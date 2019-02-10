@@ -1,7 +1,7 @@
 
 /**
  *@file flagger.cpp - Implementation of flagger class
-  *@authors Brigid Kelly/Sam VanNes
+  *@authors Brigid Kelly
   *@see "Seattle University CPSC-3500 WINTER 2019"
   */
   
@@ -9,7 +9,7 @@
 #include "flagger.h"
 using namespace std; 
   
-flagger::flagger(const void* (*ca)(void* args), string tln){
+flagger::flagger(void* (*ca)(void* args), string tln){
   
   tlog = tln;
   critSect = ca; 
@@ -17,9 +17,21 @@ flagger::flagger(const void* (*ca)(void* args), string tln){
   sem_init(&consumer, 0, 0);
   sem_init(&producer, 0, 0);
   
+  string buff = getTime();
+  
+  printf("%s %s\n", buff.c_str(), "Flagger on scene\n");
+  fLogger("Awake");
+
+
 }
 
 void* flagger::consume(){
+
+  pthread_t consTest;
+  pthread_create (&consTest, NULL, critSect, NULL);
+  
+  pthread_join (consTest, NULL);
+  
 	return NULL;
 }
 
@@ -35,12 +47,13 @@ void* flagger::addc(){
 	return NULL;
 }
 
-int getc(){
+int flagger::getc(){
 	return 1;
 }
 
 
-int getp(){
+int flagger::getp(){
 	return 1;
 }
+
 

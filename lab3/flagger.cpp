@@ -92,7 +92,7 @@ void* flagger::create_t(){
 
 volatile bool flagger::first_t(){
   if(lights_off){
-    lights_off =false;  //if theyre off, turn them on
+    lights_off = false;  //if theyre off, turn them on
     return !lights_off;
   }else
     return lights_off;
@@ -111,7 +111,7 @@ void* flagger::post(){
   sem_post(&sem);
   --waiting;
   if(0>=waiting)
-    lights_off = true;
+    lights_off = true;  //last one out turn the lights off
  
 	return NULL;
 }

@@ -21,7 +21,7 @@ int main(int argc, char** argv){
   //cout << "Flag pre: " << flag<<"\n";
   
   
-  flagger.make_t(2);
+  flagger.make_t(10);
   
   flagger.create_t();
 
@@ -31,11 +31,25 @@ int main(int argc, char** argv){
   
  return 1;
 }
-//make a mutex lock for this variable 
+
+
+
+
+
+
+
+/**
+*************************
+*****
+/   /make a mutex lock for this variable */
 volatile int carCount(0);//<<<<<this one
-//^^^^this needs a mutex lock^^^
+/**^^^^this needs a mutex lock^^^
 //we could make a function call that sends the flagger class the address of 
 //this vcariable and it makes a mutex lock for it
+*****
+*****
+**/
+
 
 
 void* criticalSection(void* args){

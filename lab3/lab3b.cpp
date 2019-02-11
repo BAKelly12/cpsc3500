@@ -21,7 +21,7 @@ int main(int argc, char** argv){
   //cout << "Flag pre: " << flag<<"\n";
   
   
-  flagger.make_t(1);
+  flagger.make_t(2);
   
   flagger.create_t();
 
@@ -41,22 +41,25 @@ volatile int carCount(0);//<<<<<this one
 void* criticalSection(void* args){
   
   flag = true;
+   flagger.sleep(2);
    cout<<"There is a car pulling up...\n";
    
   if(0==flagger.get_w()){
-     carCount++;
-     cout<<"Car number " << carCount <<"  pulling through..\n";
-     flagger.sleep(2);
-     cout<<"Car number " << carCount<<" is leaving(2 seconds later)\n";
-     flagger.post();
-  }else
-    flagger.wait();
+    //Get mutex for carCount
+     flagger.get_lock();
+     
+  }else{   
+    flagger.wait();  
+    flagger.get_lock();
+  }
+   //get mutex for carCount
     carCount++;
-    cout<<"Car number " << carCount <<"  pulling through..\n";
-    flagger.sleep(2);
-    cout<<"Car number " << carCount<<" is leaving(2 seconds later)\n";
-    
-  
+    int myCarCount = carCount; 
+    cout<<"Car number " << myCarCount <<"  pulling through..\n";
+    flagger.sleep(3);
+    cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
+    //release mutex for carCount
+    flagger.post();
   return NULL;
 }
 

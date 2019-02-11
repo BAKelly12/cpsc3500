@@ -111,7 +111,13 @@ void* flagger::join(){
   return NULL;
 }
 
+void* flagger::get_lock(){
+  ++waiting;
+  return NULL; 
+}
 
+
+  
 int flagger::get_w(){
   return waiting;
 }

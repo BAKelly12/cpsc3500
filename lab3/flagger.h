@@ -102,7 +102,21 @@ public:
       */
       void* join();
       
-      
+  //Mutex Commands
+  //
+  
+    void* init_lock();
+    void* release_lock();
+    
+    
+  /**
+   *@member lock() - takes mutex lock for prescribed variable
+   */
+     void* get_lock();
+     
+     
+     
+   
       
   //Semaphore commands
       

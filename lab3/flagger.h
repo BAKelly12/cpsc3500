@@ -12,8 +12,6 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <iostream>
-#include <string>
-#include <iomanip>
 #include <mutex>
   
 #pragma once
@@ -29,7 +27,7 @@ public:
       *      fln: flagger log filename
       *      tln: thread log filename
       *      dir: char depicting a direction of thread flow
-      *@example flagger flagger(&criticalSection, flogfilename, tlogfilename, 'n'); 
+      *@example flagger flagger(&criticalSection, "flagger.log", "threads.log", 'n'); 
       */
       
      flagger(void* (*ca)(void *args), std::string fln, std::string tln, char dir);
@@ -51,7 +49,7 @@ public:
         *@param none
         *@return int 
         **/
-      int getw();
+      int get_w();
       
       
        /**
@@ -59,13 +57,15 @@ public:
         *@param none
         *@return int 
         **/
-      int getp();
+      int get_p();
 
      
   //Thread Commands
      
      /**
-      *@member void* make_t(int num) - tells flagger how many threads to create in T_Q
+      *@member void* make_t(int num) - tells flagger how many threads to will 
+      *                               need to be made when create is called.
+      *@modifies size of T_Q 
       *@param num: number of threads to initialize
       *@return n/a
       **/
@@ -96,7 +96,7 @@ public:
       void* pop_t();
 
      /**
-      *@member pop_t() - subtracts 1 from size of T_Q (thread queue)
+      *@member join() - rejoins main process with threads
       *@param n/a 
       *@return n/a
       */
@@ -151,6 +151,7 @@ private:
       bool threadsInMotion;
 
 
+
 /** Private Member Functions **/
   
   
@@ -158,15 +159,7 @@ private:
    *@brief get current time of day
    *@return string containing current time : HH:MM:SS output in 24 hour format
    */
-  std::string getTime()
-  {
-    std::time_t tanD = std::time(nullptr);
-    char buff[20];
-    struct std::tm *sTm = localtime(&tanD); 
-    strftime(buff, sizeof(buff), "%H:%M:%S", sTm);   
-    std::string now(buff);   
-    return now; 
-  } 
+  std::string getTime();
 
 
 /**Functions for logging */
@@ -175,85 +168,38 @@ private:
    *@brief Initializes flagger logging 
    *@return 1 if init success, -1 if already enabled or failed
    */
-  int fLog_init()
-  {
-    if(!fLogHasHeader){
-      flog_header();
-      flog_enable = true;
-      return 1;
-    }else
-      return -1;
-  }
+  int fLog_init();
+ 
   
   /**
    *@brief Initializes thread logging 
    *@return 1 if init success, -1 if already enabled or failed
    */
-  int tLog_init()
-  {
-    if(!tLogHasHeader){
-      tlog_enable = true;
-      tlog_header();
-      return 1;
-    }else
-      return -1; 
-  }
-
+  int tLog_init();
+  
  /**
    *@brief creates log entry in flagger logfile
-   *@param message for input to flagger logfile
+   *@param message in string format for input to flagger logfile
    */
-  inline void fLog( std::string logMsg )
-  {
+  inline void fLog( std::string logMsg );
 
-    std::string now = getTime();
-    
-    std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
-    ofs << now << '\t' << logMsg << std::endl;
-    ofs.close();
-  }
 
   /**
    *@brief creates log entry in thread logfile
    *@param message for input to thread logfile
    */
-  inline void tLog( std::string logMsg )
-  {
+  inline void tLog( std::string logMsg );
 
-    std::string now = getTime();
-    
-    std::cout << logMsg << "\n";
-    std::ofstream ofs(tLogFilePath, std::ios_base::out | std::ios_base::app );
-    ofs << now << '\t' << logMsg << std::endl;
-    ofs.close();
-  }
-  
   /**
    *@brief creates header inside flagger logfile
    */
-  void* flog_header()
-  {
-    
-      std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
-      ofs<<"Time \t\t\t State"<<std::endl;
-      ofs.close();
-      fLogHasHeader = true;
-    return NULL;
-  }
+  void* flog_header();
+
 
    /**
    *@brief creates header inside thread logfile
    */
-  void* tlog_header()
-  {
-  
-    std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
-    ofs<<"Time \t\t\t State"<<std::endl;
-    ofs.close();
-    tLogHasHeader = true;
+  void* tlog_header();
 
-  return NULL;
-  
-  }
 
 };//end of class definition

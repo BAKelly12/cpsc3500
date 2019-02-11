@@ -109,15 +109,15 @@ void* flagger::join(){
   //logging for vehicle exit here
   
   return NULL;
-  
 }
 
-int flagger::getw(){
+
+int flagger::get_w(){
   return waiting;
 }
 
 
-int flagger::getp(){ 
+int flagger::get_p(){ 
   int n(0);
   sem_getvalue(&sem, &n); 
 	return n;
@@ -151,3 +151,75 @@ int flagger::sleep(int seconds){
   return pthread_cond_timedwait(&conditionvar, &mutex, &timetoexpire);
  
 } 
+
+/**Functions for logging */
+
+std::string flagger::getTime()
+{
+    std::time_t tanD = std::time(nullptr);
+    char buff[20];
+    struct std::tm *sTm = localtime(&tanD); 
+    strftime(buff, sizeof(buff), "%H:%M:%S", sTm);   
+    std::string now(buff);   
+    return now; 
+} 
+
+int flagger::fLog_init(){
+    if(!fLogHasHeader){
+      flog_header();
+      flog_enable = true;
+      return 1;
+    }else
+      return -1;
+}
+  
+int flagger::tLog_init(){
+    if(!tLogHasHeader){
+      tlog_enable = true;
+      tlog_header();
+      return 1;
+    }else
+      return -1; 
+}
+
+inline void flagger::fLog( std::string logMsg ){
+
+    std::string now = getTime();
+    
+    std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
+    ofs << now << '\t' << logMsg << std::endl;
+    ofs.close();
+}
+
+inline void flagger::tLog( std::string logMsg ){
+
+    std::string now = getTime();
+    
+    std::cout << logMsg << "\n";
+    std::ofstream ofs(tLogFilePath, std::ios_base::out | std::ios_base::app );
+    ofs << now << '\t' << logMsg << std::endl;
+    ofs.close();
+}
+  
+
+void* flagger::flog_header(){
+    
+      std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
+      ofs<<"Time \t\t\t State"<<std::endl;
+      ofs.close();
+      fLogHasHeader = true;
+    return NULL;
+}
+
+
+void* flagger::tlog_header(){
+  
+    std::ofstream ofs(fLogFilePath, std::ios_base::out | std::ios_base::app );
+    ofs<<"Time \t\t\t State"<<std::endl;
+    ofs.close();
+    tLogHasHeader = true;
+
+  return NULL;
+  
+}
+

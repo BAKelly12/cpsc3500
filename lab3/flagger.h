@@ -94,6 +94,12 @@ public:
       *@return n/a
       */
       void* pop_t();
+      
+    /**
+      *@member isThefirst() - Checks if thread is the first one through;
+      *@return 1 if is the first, 0 if not
+      */
+      volatile bool first_t();
 
      /**
       *@member join() - rejoins main process with threads
@@ -103,7 +109,7 @@ public:
       void* join();
       
   //Mutex Commands
-  //
+ 
   
     void* init_lock();
     void* release_lock();
@@ -114,9 +120,7 @@ public:
    */
      void* get_lock();
      
-     
-     
-   
+
       
   //Semaphore commands
       
@@ -133,6 +137,7 @@ public:
        *@return n/a
        */
       void* wait();
+      
       
       /**
        *@member int sleep(int seconds) - Thread Sleep Timer 
@@ -158,11 +163,13 @@ private:
       sem_t sem;
       pthread_t consTest;
       
+     
       bool tlog_enable;
       bool flog_enable;
       bool tLogHasHeader;
       bool fLogHasHeader;
       bool threadsInMotion;
+      volatile bool lights_off;
 
 
 

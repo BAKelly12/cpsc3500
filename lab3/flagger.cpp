@@ -21,6 +21,7 @@ flagger::flagger(void* (*ca)(void* args), string fln, string tln){
   tLogHasHeader = false;
   fLogHasHeader = false;  
   threadsInMotion = false;
+  lights_off = true;
 }
 
 
@@ -36,6 +37,7 @@ flagger::flagger(void* (*ca)(void* args), string fln, string tln, char dir){
   tLogHasHeader = false;
   fLogHasHeader = false; 
   threadsInMotion = false;
+  lights_off = true;
   
 }
 
@@ -75,6 +77,7 @@ void* flagger::pop_t(){
 void* flagger::create_t(){
   
   if(!threadsInMotion){ 
+  
     for(size_t i(0); i<T_Q.size(); i++)
       pthread_create(&T_Q[i], NULL, critSect, NULL); 
     
@@ -84,6 +87,15 @@ void* flagger::create_t(){
     cerr << "Cannot create more threads while threads are in motion";
   
   return NULL; 
+}
+
+
+volatile bool flagger::first_t(){
+  if(lights_off){
+    lights_off =false;  //if theyre off, turn them on
+    return !lights_off;
+  }else
+    return lights_off;
 }
 
 void* flagger::wait(){
@@ -98,6 +110,8 @@ void* flagger::post(){
   //log critical section entry time here
   sem_post(&sem);
   --waiting;
+  if(0>=waiting)
+    lights_off = true;
  
 	return NULL;
 }
@@ -115,7 +129,6 @@ void* flagger::get_lock(){
   ++waiting;
   return NULL; 
 }
-
 
   
 int flagger::get_w(){

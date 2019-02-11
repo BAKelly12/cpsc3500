@@ -41,13 +41,12 @@ volatile int carCount(0);//<<<<<this one
 void* criticalSection(void* args){
   
   flag = true;
-   flagger.sleep(2);
+   //flagger.sleep();
    cout<<"There is a car pulling up...\n";
    
-  if(0==flagger.get_w()){
+  if(flagger.first_t()){
     //Get mutex for carCount
-     flagger.get_lock();
-     
+     flagger.get_lock();   
   }else{   
     flagger.wait();  
     flagger.get_lock();
@@ -56,10 +55,12 @@ void* criticalSection(void* args){
     carCount++;
     int myCarCount = carCount; 
     cout<<"Car number " << myCarCount <<"  pulling through..\n";
-    flagger.sleep(3);
+    flagger.sleep(2);
     cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
     //release mutex for carCount
     flagger.post();
   return NULL;
 }
+//after the thrads are all clear there should be a signal to reset the first thread//
+//bool inside the class..  that way it can be reused repeatedly
 

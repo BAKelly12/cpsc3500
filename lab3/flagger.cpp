@@ -106,6 +106,11 @@ void* flagger::wait(){
 	return NULL;
 }
 
+void* flagger::get_lock(){
+  ++waiting;
+  return NULL; 
+}
+
 void* flagger::post(){
   //log critical section entry time here
   sem_post(&sem);
@@ -125,11 +130,7 @@ void* flagger::join(){
   return NULL;
 }
 
-void* flagger::get_lock(){
-  ++waiting;
-  return NULL; 
-}
-
+//whenever you need the logic
   
 int flagger::get_w(){
   return waiting;

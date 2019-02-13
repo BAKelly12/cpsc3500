@@ -3,6 +3,11 @@
 
 #include "flagger.h"
 #include <iostream>
+#include <cstdlib>
+#include <queue>
+
+#define NUMBER_OF_THREADS 100
+#define NUMBER_OF_ROTATIONS 4
 
 using namespace std;
 
@@ -10,71 +15,134 @@ volatile bool flag = false;
 
 
 string tlogname = "cars.log";
-string flogname = "flagger.log";
+string flogname = "flagPerson.log";
 void* criticalSection(void* args);
+void* getDirection();
 
-flagger flagger(&criticalSection, flogname, tlogname, 'n'); 
 
+flagger flagPerson(&criticalSection, flogname, tlogname); 
+flagger dirMtx;
 
-int main(int argc, char** argv){
+int main(int argc, char** argv){ 
 
-  //cout << "Flag pre: " << flag<<"\n";
+  srand(time(NULL));
+  flagPerson.make_t((int)NUMBER_OF_THREADS);
   
-  
-  flagger.make_t(10);
-  
-  flagger.create_t();
+  flagPerson.create_t();
 
-  flagger.join();
-  
-  //cout<< "Flag post: "<<flag<<"\n";
-  
+  flagPerson.join();
+ 
  return 1;
 }
 
 
-
-
-
-
-
-/**
-*************************
-*****
-/   /make a mutex lock for this variable */
-volatile int carCount(0);//<<<<<this one
-/**^^^^this needs a mutex lock^^^
-//we could make a function call that sends the flagger class the address of 
-//this vcariable and it makes a mutex lock for it
-*****
-*****
-**/
+volatile int carCount(0);
+queue<char> southQ;
+queue<char> northQ;
+volatile char direction = '-';
+volatile int nCount(0), sCount(0);
 
 
 
 void* criticalSection(void* args){
   
-  flag = true;
-   //flagger.sleep();
-   cout<<"There is a car pulling up...\n";
-   
-  if(flagger.first_t()){
-    //Get mutex for carCount
-     flagger.get_lock();   
-  }else{   
-    flagger.wait();  
-    flagger.get_lock();
+    
+  if(dirMtx.first_t())
+    dirMtx.get_lock();   
+  else{   
+    dirMtx.wait();  
+    dirMtx.get_lock(); 
   }
-   //get mutex for carCount
+
+   getDirection();
+   if(myPreDir = 'N'){
+     northQ.push(direction);
+     
+   else if(myPreDir = 'S')
+     
+
+
+
+  dirMtx.post();
+  dirMtx.release_lock();
+  
+  
+   
+   
+   
+   
+   
+   
+   
+   
+
+  if(flagPerson.first_t()){
+     flagPerson.get_lock();   
+  }else{   
+    flagPerson.wait();  
+    flagPerson.get_lock();
+   
+  }//logic block for making threads wait
+  
+     /////////START CRITICAL SECTION////////////////
+   
+   char myDir = carQueue.front();
+   carQueue.pop();
+ 
+ 
+  if(myDir == '-'){
+    cerr<<"no cars coming.. I SLEEP...\n";
+    direction = 'N';
+    flagPerson.sleep(2);
+    cerr<<"I'm done sleeping\n";
+  }
+  else{
+   
     carCount++;
     int myCarCount = carCount; 
-    cout<<"Car number " << myCarCount <<"  pulling through..\n";
-    flagger.sleep(2);
+    cout<<"Car number " << myCarCount <<" pulling through..DIR: "<<myDir<<"\n";
+    flagPerson.sleep(1);
     cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
-    //release mutex for carCount
-    flagger.post();
-  return NULL;
-}
-//after the thrads are all clear there should be a signal to reset the first thread//
-//bool inside the class..  that way it can be reused repeatedly
+  }
 
+   
+   flagPerson.release_lock();
+   flagPerson.post();
+ 
+  return NULL;
+} 
+
+
+void* getDirection(){ 
+  
+   //srand(time(arg->t));
+
+  
+  if(direction == '-'){//if no cars coming, generate a 50-50 chance of where a car is
+    if(rand() % 10 + 1 <5)
+      direction = 'N';
+    else
+      direction = 'S';
+  }
+  
+  if(rand() % 10 + 1 <=9)//if there's a car at all
+  {
+    if (8 <= rand() % 10 + 1)//is it the same direction?   
+    { //Change direction
+      if (direction == 'N')
+      {
+        direction = 'S';
+      }
+      else if(direction == 'S')
+      {
+         direction = 'N';
+      }
+    }
+  }else//no car
+  {
+    direction = '-';
+  }
+ 
+
+ return NULL;
+}

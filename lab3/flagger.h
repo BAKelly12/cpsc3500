@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <iostream>
-#include <mutex>
+
   
 #pragma once
  
@@ -27,14 +27,15 @@ public:
       *      fln: flagger log filename
       *      tln: thread log filename
       *      dir: char depicting a direction of thread flow
+      *@note:  Including these file names is the only way to init logging
       *@example flagger flagger(&criticalSection, "flagger.log", "threads.log", 'n'); 
       */
-      
+       
      flagger(void* (*ca)(void *args), std::string fln, std::string tln, char dir);
      flagger(void* (*ca)(void *args), std::string fln, std::string tln);
      
-/**  Big Six **/
-      flagger() = delete;
+/**  Big Six **/ 
+      flagger();
       ~flagger();
       flagger(const flagger& other) = delete;
       flagger(flagger&& temp) = delete;
@@ -106,19 +107,24 @@ public:
       *@param n/a 
       *@return n/a
       */
-      void* join();
+     void* join();
       
   //Mutex Commands
- 
-  
-    void* init_lock();
-    void* release_lock();
-    
-    
+      
   /**
-   *@member lock() - takes mutex lock for prescribed variable
+   *@member get_lock() - gets flagger mutex
+   *@return n/a
    */
-     void* get_lock();
+    
+     int get_lock();
+     
+     
+     /**
+      *@memeber release_lock() - Releases flagger mutex
+      *@return n/a
+      */
+     
+     int release_lock();
      
 
       
@@ -130,6 +136,8 @@ public:
        *@return n/a
        */
       void* post();
+      
+    
       
       /**
        *@member void* wait() - abstraction of semaphore sem_wait() with log functionality
@@ -157,12 +165,12 @@ private:
       int waiting;
       int tid;
       std::vector<pthread_t> T_Q;
-      
+          
       void* (*critSect)(void* args);
       char direction;
       sem_t sem;
       pthread_t consTest;
-      
+      pthread_mutex_t mtx; 
      
       bool tlog_enable;
       bool flog_enable;

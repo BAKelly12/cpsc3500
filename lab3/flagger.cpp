@@ -8,7 +8,19 @@
 #include "flagger.h"
 
 using namespace std; 
-  
+
+flagger::flagger(){
+  waiting = 0; 
+  sem_init(&sem, 0, 0);
+  tLogHasHeader = false;
+  fLogHasHeader = false;  
+  threadsInMotion = false;
+  lights_off = true; 
+  flog_enable = false;
+  tlog_enable = false;
+}
+ 
+ 
 flagger::flagger(void* (*ca)(void* args), string fln, string tln){
   waiting = 0;
   tLogFilePath = tln;
@@ -25,24 +37,9 @@ flagger::flagger(void* (*ca)(void* args), string fln, string tln){
 }
 
 
-flagger::flagger(void* (*ca)(void* args), string fln, string tln, char dir){ 
-  waiting = 0;
-  tLogFilePath = tln;
-  critSect = ca;  
-  sem_init(&sem, 0, 0);
-  direction = ' ';
-  fLogFilePath = fln;
-  fLog_init();
-  tLog_init(); 
-  tLogHasHeader = false;
-  fLogHasHeader = false; 
-  threadsInMotion = false;
-  lights_off = true;
-  
-}
-
 flagger::~flagger(){
   sem_destroy(&sem);
+  pthread_mutex_destroy(&mtx);
 }
 
 void* flagger::make_t(int num){
@@ -63,6 +60,7 @@ void* flagger::push_t(){
   
   return NULL;
 }
+
 void* flagger::pop_t(){
   
   if(!threadsInMotion)
@@ -75,18 +73,27 @@ void* flagger::pop_t(){
   
 
 void* flagger::create_t(){
+ 
+  time_t t = time(NULL);
   
+ 
+   time_t seed[T_Q.size()]; 
+ 
+   
   if(!threadsInMotion){ 
   
-    for(size_t i(0); i<T_Q.size(); i++)
-      pthread_create(&T_Q[i], NULL, critSect, NULL); 
+    for(size_t i(0); i<T_Q.size(); i++){
+      
+      seed[i] = t+i;
+      pthread_create(&T_Q[i], NULL, critSect, &seed[i]);  
+    }
     
     threadsInMotion = true;    
   }
   else
     cerr << "Cannot create more threads while threads are in motion";
   
-  return NULL; 
+  return NULL;
 }
 
 
@@ -99,17 +106,26 @@ volatile bool flagger::first_t(){
 }
 
 void* flagger::wait(){
-  //log arrival time here
   ++waiting;
   sem_wait(&sem);
 
 	return NULL;
 }
 
-void* flagger::get_lock(){
-  ++waiting;
-  return NULL; 
+int flagger::get_lock(){
+  if(pthread_mutex_init(&mtx,NULL))
+      return -1;       
+   pthread_mutex_lock(&mtx);
+   return 0; 
 }
+
+
+int flagger::release_lock(){
+  pthread_mutex_unlock(&mtx);  
+  return 0;
+}
+
+
 
 void* flagger::post(){
   //log critical section entry time here
@@ -120,6 +136,8 @@ void* flagger::post(){
  
 	return NULL;
 }
+
+
 
 void* flagger::join(){ 
 
@@ -146,7 +164,6 @@ int flagger::get_p(){
 
 int flagger::sleep(int seconds){
   
-  fLog("Sleep");
   pthread_mutex_t mutex;
   pthread_cond_t conditionvar;
   
@@ -165,24 +182,25 @@ int flagger::sleep(int seconds){
   //it to our delay time 
   timetoexpire.tv_sec = (unsigned int)time(NULL) + seconds;
   timetoexpire.tv_nsec = 0;
-  
-  fLog("Awake");
-  
+
   return pthread_cond_timedwait(&conditionvar, &mutex, &timetoexpire);
  
 } 
 
+
 /**Functions for logging */
 
-std::string flagger::getTime()
+string flagger::getTime()
 {
-    std::time_t tanD = std::time(nullptr);
+    time_t tanD = time(nullptr);
     char buff[20];
-    struct std::tm *sTm = localtime(&tanD); 
+    struct tm *sTm = localtime(&tanD); 
     strftime(buff, sizeof(buff), "%H:%M:%S", sTm);   
     std::string now(buff);   
     return now; 
 } 
+
+
 
 int flagger::fLog_init(){
     if(!fLogHasHeader){
@@ -192,6 +210,7 @@ int flagger::fLog_init(){
     }else
       return -1;
 }
+
   
 int flagger::tLog_init(){
     if(!tLogHasHeader){

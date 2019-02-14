@@ -28,14 +28,17 @@ const int numInteractions = 200;
 int burstCarsN = 0;
 int burstCarsS = 0;
 int numCarsThru = 0;
+bool entered = false;
 
-sem_t northStuff, southStuff;
+sem_t northSendStuff, southSendStuff, southReturnStuff, northReturnStuff;
 
 int main()
 {
 	
-	sem_init(&northStuff, 0, 0);
-	sem_init(&southStuff, 0, 0);
+	sem_init(&northSendStuff, 0, 0);
+	sem_init(&southReturnStuff, 0, 0);
+	sem_init(&northSendStuff, 0, 0);
+	sem_init(&southReturnStuff, 0, 0);
 	
 	pthread_t makeCN, makeCS, critThread;
 	
@@ -47,8 +50,10 @@ int main()
 	pthread_join(makeCS, NULL);
 	pthread_join(critThread, NULL);
 
-	sem_destroy(&northStuff);
-	sem_destroy(&southStuff);
+	sem_destroy(&northSendStuff);
+	sem_destroy(&southSendStuff);
+	sem_destroy(&northReturnStuff);
+	sem_destroy(&southReturnStuff);
 }
 
 //Critical part of the process.
@@ -56,29 +61,47 @@ void* criticalSection(void* args)
 {
 	while (numCarsThru != numInteractions)
 	{
-		sem_wait(&northStuff);
-		sem_wait(&southStuff);
+		sem_wait(&northSendStuff);
+		sem_wait(&southSendStuff);
 			
 		if (burstCarsN == 0 && burstCarsS == 0){
 			cout << "flagger is asleep, number: " << numCarsThru << endl;
 			pthread_sleep(1);
 			numCarsThru++;
+			sem_post(&northReturnStuff);
+			sem_post(&southReturnStuff);
 		}
 		else if (burstCarsN > 0 && burstCarsS < 10){
 			while (burstCarsN > 0 && burstCarsS < 10){
+				if (entered == true) {
+					sem_wait(&northSendStuff);
+					sem_wait(&southSendStuff);
+				}
+				entered = true;
 				burstCarsN--;
 				cout << "Car north goes thru number: " << numCarsThru << endl;
 				pthread_sleep(1);
 				numCarsThru++;
+				sem_post(&northReturnStuff);
+				sem_post(&southReturnStuff);
 			}
+			entered = false;
 		}
 		else if (burstCarsS > 0 && burstCarsN < 10){
 			while (burstCarsS > 0 && burstCarsN < 10){
+				if (entered == true) {
+					sem_wait(&northSendStuff);
+					sem_wait(&southSendStuff);
+				}
+				entered = true;
 				burstCarsS--;
 				cout << "Car south goes thru number: " << numCarsThru << endl;
 				pthread_sleep(1);
 				numCarsThru++;
+				sem_post(&northReturnStuff);
+				sem_post(&southReturnStuff);
 			}
+			entered = false;
 		}
 		else {
 			cout << "More than 10 or something went wrong.. following amount:";
@@ -86,11 +109,11 @@ void* criticalSection(void* args)
 			cout << "CarsS: " << burstCarsS << endl;
 			pthread_sleep(1);
 			numCarsThru++;
+			sem_post(&northReturnStuff);
+			sem_post(&southReturnStuff);
 		
 		}
 
-		sem_post(&northStuff);
-		sem_post(&southStuff);
 
 
 	}
@@ -108,18 +131,18 @@ void* makeCarsN(void* args)
 		burstCarsN++;
 		pthread_mutex_unlock(&northVar);
 		
-		while (rand() % 10 + 1 <= 8) //Do the 80%
+		while (rand() % 10 + 1 <= 6) //Do the 80%
 		{
 			pthread_mutex_lock(&northVar);
 			burstCarsN++;
 			pthread_mutex_unlock(&northVar);
 		}
-		for (int i = 1; i < 11; i++)
+		for (int i = 0; i < 20; i++)
 		{
-			sem_post(&northStuff);
+			sem_post(&northSendStuff);
 			pthread_sleep(1);
 			//cout << "north asleep for " << i << "seconds" << endl;
-			sem_wait(&northStuff);
+			sem_wait(&northReturnStuff);
 		}
 	}
 
@@ -136,18 +159,18 @@ void* makeCarsS(void* args)
 		burstCarsS++;
 		pthread_mutex_unlock(&southVar);
 		
-		while (rand() % 10 + 1 <= 8) //Do the 80%
+		while (rand() % 10 + 1 <= 6) //Do the 80%
 		{
 			pthread_mutex_lock(&southVar);
 			burstCarsS++;
 			pthread_mutex_unlock(&southVar);
 		}
-		for (int i = 1; i < 11; i++)
+		for (int i = 0; i < 20; i++)
 		{
-			sem_post(&southStuff);
+			sem_post(&southSendStuff);
 			pthread_sleep(1);
 			//cout << "south asleep for " << i << "seconds" << endl;
-			sem_wait(&southStuff);
+			sem_wait(&southReturnStuff);
 		}
 		
 	}

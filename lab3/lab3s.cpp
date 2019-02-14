@@ -11,11 +11,6 @@
 using namespace std;
 
 int pthread_sleep (int seconds);
-void* makeCarsN(void* args);
-void* makeCarsS(void* args);
-
-
-
 
 //Need to make the road and the cars. This is a queue.
 //Will need an "odd" or "randnum".
@@ -31,6 +26,7 @@ int numCarsThru = 0;
 bool entered = false;
 
 sem_t northSendStuff, southSendStuff, southReturnStuff, northReturnStuff;
+pthread_t makeCN, makeCS, critThread;
 
 int main()
 {
@@ -39,16 +35,22 @@ int main()
 	sem_init(&southReturnStuff, 0, 0);
 	sem_init(&northSendStuff, 0, 0);
 	sem_init(&southReturnStuff, 0, 0);
+
+	pthread_mutex_init(&northVar, NULL);
+	pthread_mutex_init(&southVar, NULL);
 	
-	pthread_t makeCN, makeCS, critThread;
 	
 	pthread_create(&makeCN, NULL, makeCarsN, NULL);
 	pthread_create(&makeCS, NULL, makeCarsS, NULL);
 	pthread_create(&critThread, NULL, criticalSection, NULL);
-	
-	pthread_join(makeCN, NULL);
-	pthread_join(makeCS, NULL);
+
+	// *NOTE* The makeCN and makeCS threads are removed with detach().	
+	//pthread_join(makeCN, NULL);
+	//pthread_join(makeCS, NULL);
 	pthread_join(critThread, NULL);
+
+	pthread_mutex_destroy(&northVar);
+	pthread_mutex_destroy(&southVar);
 
 	sem_destroy(&northSendStuff);
 	sem_destroy(&southSendStuff);
@@ -72,7 +74,9 @@ void* criticalSection(void* args)
 			sem_post(&southReturnStuff);
 		}
 		else if (burstCarsN > 0 && burstCarsS < 10){
-			while (burstCarsN > 0 && burstCarsS < 10){
+			while (burstCarsN > 0 && burstCarsS < 10 && 
+						 numCarsThru != numInteractions){
+				
 				if (entered == true) {
 					sem_wait(&northSendStuff);
 					sem_wait(&southSendStuff);
@@ -90,7 +94,9 @@ void* criticalSection(void* args)
 			entered = false;
 		}
 		else if (burstCarsS > 0 && burstCarsN < 10){
-			while (burstCarsS > 0 && burstCarsN < 10){
+			while (burstCarsS > 0 && burstCarsN < 10 && 
+						 numCarsThru != numInteractions){
+				
 				if (entered == true) {
 					sem_wait(&northSendStuff);
 					sem_wait(&southSendStuff);
@@ -108,17 +114,46 @@ void* criticalSection(void* args)
 			}
 			entered = false;
 		}
+		//Past this point, 10 or more cars are waiting on the car side.
 		else {
-			cout << "More than 10 or something went wrong.. following amount:";
-			cout << endl << "CarsN: " << burstCarsN << endl;
-			cout << "CarsS: " << burstCarsS << endl;
-			pthread_sleep(1);
-			numCarsThru++;
-			sem_post(&northReturnStuff);
-			sem_post(&southReturnStuff);
-		
+			if (burstCarsN > 10) { //North more than 10 first
+				cout << "North more than 10:";
+				cout << endl << "CarsN: " << burstCarsN << endl;
+				cout << "CarsS: " << burstCarsS << endl;
+				entered = true; //Technically it is in north side again
+				pthread_mutex_lock(&northVar);
+				burstCarsN--;
+				pthread_mutex_unlock(&northVar);
+				cout << "Car north goes thru number: " << numCarsThru << endl;
+				pthread_sleep(1);
+				numCarsThru++;
+				sem_post(&northReturnStuff);
+				sem_post(&southReturnStuff);
+				entered = false;
+			}
+			else { //South cars more than 10
+				cout << "South more than 10:";
+				cout << endl << "CarsN: " << burstCarsN << endl;
+				cout << "CarsS: " << burstCarsS << endl;
+				entered = true; //Technically it is in north side again
+				pthread_mutex_lock(&southVar);
+				burstCarsS--;
+				pthread_mutex_unlock(&southVar);
+				cout << "Car south goes thru number: " << numCarsThru << endl;
+				pthread_sleep(1);
+				numCarsThru++;
+				sem_post(&northReturnStuff);
+				sem_post(&southReturnStuff);
+				entered = false;
+			}
 		}
 	}
+	//Get the other threads out
+	sem_wait(&northSendStuff);
+	sem_wait(&southSendStuff);
+	pthread_detach(makeCN);
+	pthread_detach(makeCS);
+
 	return NULL;
 }
 

@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <iostream>
-#define NUMBER_OF_CARS 50
+#define NUMBER_OF_CARS 40
 #define MAX_WAITING_CARS 10
 
 using namespace std;
@@ -73,18 +73,18 @@ int main(){
 			} 
 		
     /*set the north's direction and make its generator*/
-	 char* nArg = "N";	  
+	 char nArg = 'N';	  
 	 pthread_t makeNorth; 
-	 if ( -1 == pthread_create(&makeNorth, NULL, &makeCar, (void*)nArg ))
+	 if ( -1 == pthread_create(&makeNorth, NULL, &makeCar, (void*)&nArg ))
 		{
 			perror("error making north car generator");
 			return -1;
 		} 
 				
    /*set the south's direction and make its generator*/
-	 char* sArg = "S";
+	 char sArg = 'S';
 	 pthread_t makeSouth;
-	 if ( -1 == pthread_create(&makeSouth, NULL, &makeCar, &sArg )){
+	 if ( -1 == pthread_create(&makeSouth, NULL, &makeCar,(void*)&sArg )){
 			perror("error making south car generator");
 			return -1;
 		}
@@ -143,7 +143,7 @@ void* criticalSection(void* args){
 		fLog("Asleep");
 		cout<< "flagPerson: I SLEEP...\n";
 		while(!(wNorth || wSouth)){} //wait while nothing is there
-		cout << "flagPerson: I HAVE AWOKEN...\n";
+		cout << "flagPerson: I HAVE AWOKEN...\n\n";
 		fLog("Awake");
 		if(wNorth)
 			dSwitch = true;
@@ -183,9 +183,11 @@ void* criticalSection(void* args){
 		carCount++;	
 		cout<<"Car number " << myCarCount <<" pulling through..DIR: "<<myDir<<"\n";
 		pthread_sleep(2);
-		cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
+		cout<<"Car number " << myCarCount<<" is leaving\n";
 		tLog_time();//exit time
 		tLog_endl();		
+        cout << "Remaining in queue:";
+        cout << " N:" << wNorth << " S: "<<  wSouth << "\n\n";
 	}
 	else if(myDir == 'S' && wSouth !=0)
     {	
@@ -200,10 +202,11 @@ void* criticalSection(void* args){
 	    carCount++;	
         cout<<"Car number " << myCarCount <<" pulling through..DIR: "<<myDir<<"\n";
         pthread_sleep(2);
-        cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
+        cout<<"Car number " << myCarCount<<" is leaving...\n";
 		tLog_time();//exit time
 		tLog_endl();
-		
+		cout << "Remaining in queue:";;
+        cout << " N:" << wNorth << " S: "<<  wSouth << "\n\n";
 	}
 	
    pthread_mutex_unlock(&csmtx);

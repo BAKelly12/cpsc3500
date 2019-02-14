@@ -37,15 +37,13 @@ int main(int argc, char** argv){
 
 
 volatile int carCount(0);
-queue<char> southQ;
-queue<char> northQ;
+queue<char> carQueue;
 volatile char direction = '-';
-volatile int nCount(0), sCount(0);
-
+volatile int opCount(0);
 
 
 void* criticalSection(void* args){
-  
+  srand((int)*args);
     
   if(dirMtx.first_t())
     dirMtx.get_lock();   
@@ -56,25 +54,28 @@ void* criticalSection(void* args){
 
    getDirection();
    if(myPreDir = 'N'){
-     northQ.push(direction);
-     
+     carQueue.push(direction);   
    else if(myPreDir = 'S')
-     
 
-
-
+	   
   dirMtx.post();
   dirMtx.release_lock();
   
   
-   
-   
-   
-   
-   
-   
-   
-   
+  while (carCount.front() != '-')
+  {
+    if (
+       tempCarQueue.push(carQueue.front());
+       if (carQueue.front() !=
+         opCount++;
+       carQueue.pop();
+    }
+  }
+  
+    
+  if (opCount >= 10)
+    sem_wait(&carOpposite);
+
 
   if(flagPerson.first_t()){
      flagPerson.get_lock();   
@@ -113,6 +114,10 @@ void* criticalSection(void* args){
 } 
 
 
+
+
+
+/*
 void* getDirection(){ 
   
    //srand(time(arg->t));
@@ -146,3 +151,4 @@ void* getDirection(){
 
  return NULL;
 }
+*/

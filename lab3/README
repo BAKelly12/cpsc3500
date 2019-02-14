@@ -2,67 +2,91 @@
  * README file for project 3
  */
 
+ TO COMPILE AND RUN:   make p3
+					   ./p3
+ 
+ 
 ///////// Team member's name and contributions //////////////////////
-Team member #1: 
-Contributions:
-Percentage of contributions: 
-
-Team member #2:
-Contributions:
-Percentage of contributions:
-
+Team member #1: Brigid Kelly
+Contributions: Wrote the program
+Percentage of contributions: 100%
 
 
 /////// Thread information /////////////////////////////////////////
-Total threads: 
+Total threads: 3
 
 [Thread #1]
-  --> Task: producer that produces xxxx
-  --> Thread function name:
+  --> Task: Consumer that consumes the waiting cars (wNorth, wSouth)
+  --> Thread function name: criticalSection
 
 [Thread #2]
-  --> Task:
-  --> Thread function name:
+  --> Task: Produces cars in northern direction 
+  --> Thread function name: makeCars
+  
+[Thread #3]
+  --> Task: Produces cars in southern direction 
+  --> Thread function name: makeCars
 
 ..............
 
 
 
 ////// Semaphores ////////////////////////////////////////////////
-Number of semaphores:
+Number of semaphores: 2
 
 [Sempahore #1]
-  --> Variable:
-  --> Initial value:
-  --> Purpose: make xxx blocked upon on events xxxx
+  --> Variable: flag
+  --> Initial value: 0
+  --> Purpose: holds all waiting threads at start of critical section
 
+  
+[Sempahore #2]
+  --> Variable: makerSem
+  --> Initial value: 1
+  --> Purpose: aids with synchronization of directional 
+				generation threads pushing to arrival-time queue
 ............
-
 
 
 ////// Mutex lock ///////////////////////////////////////////////
-Number of mutex locks:
+Number of mutex locks:2
 
 [Mutex lock #1]
-  --> Variable:
-  --> Purpose: avoid race condition on shared data structure xxxx
+  --> Variable:  csmtx
+  --> Purpose: avoid race condition on variables within critical section function
+  
+  
+[Mutex lock #2]
+  --> Variable:  makerMtx
+  --> Purpose: avoid race condition on pushing to arrival-time queue
 
 ............
 
 
-///// Strenths  ////////////////////////////////////////////////
+///// Strengths  ////////////////////////////////////////////////
 
-
-
-
-
-
-
+  -->program operates as intended
+  -->all threads operate concurrently
+  -->uses inline logging functions to reduce memory access time when calling 
+	multiple logging functions
+  -->minimal mutex and semaphores
+  -->no cross-dependencies (no deadlocks)
+  -->flag person manages directions, switches directions and sleeps properly
+  -->logging times are accurate and in-order
 
 
 //// Weaknesses ///////////////////////////////////////////////
 
-
+  --> uses a lot of conditional logic to help achieve synchronization
+  --> may allow thread in critical section to continue past locks and waiting
+		sections if a post is made and the thread is able to bypass the check logic
+		for number of each direction in queue
+  --> uses pthread_cancel to kill processes in infinite loops, could be synchronized
+		better using a condition variable.
+  --> does not make use of pthread::condition_variable
+  --> logging solution may not be most efficient way
+  --> logging possibly may not line up properly in text editors outside of VIM.
+  
 
 
 

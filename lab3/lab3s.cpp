@@ -78,7 +78,9 @@ void* criticalSection(void* args)
 					sem_wait(&southSendStuff);
 				}
 				entered = true;
+				pthread_mutex_lock(&northVar);
 				burstCarsN--;
+				pthread_mutex_unlock(&northVar);
 				cout << "Car north goes thru number: " << numCarsThru << endl;
 				pthread_sleep(1);
 				numCarsThru++;
@@ -94,7 +96,10 @@ void* criticalSection(void* args)
 					sem_wait(&southSendStuff);
 				}
 				entered = true;
+				pthread_mutex_lock(&southVar);
 				burstCarsS--;
+				pthread_mutex_unlock(&southVar);
+
 				cout << "Car south goes thru number: " << numCarsThru << endl;
 				pthread_sleep(1);
 				numCarsThru++;
@@ -113,9 +118,6 @@ void* criticalSection(void* args)
 			sem_post(&southReturnStuff);
 		
 		}
-
-
-
 	}
 	return NULL;
 }
@@ -131,11 +133,14 @@ void* makeCarsN(void* args)
 		burstCarsN++;
 		pthread_mutex_unlock(&northVar);
 		
-		while (rand() % 10 + 1 <= 6) //Do the 80%
+		while (rand() % 10 + 1 <= 8) //Do the 80%
 		{
+			sem_post(&northSendStuff);
 			pthread_mutex_lock(&northVar);
 			burstCarsN++;
 			pthread_mutex_unlock(&northVar);
+			pthread_sleep(1);
+			sem_wait(&northReturnStuff);
 		}
 		for (int i = 0; i < 20; i++)
 		{
@@ -159,11 +164,14 @@ void* makeCarsS(void* args)
 		burstCarsS++;
 		pthread_mutex_unlock(&southVar);
 		
-		while (rand() % 10 + 1 <= 6) //Do the 80%
+		while (rand() % 10 + 1 <= 8) //Do the 80%
 		{
+			sem_post(&southSendStuff);
 			pthread_mutex_lock(&southVar);
 			burstCarsS++;
 			pthread_mutex_unlock(&southVar);
+			pthread_sleep(1);
+			sem_wait(&southReturnStuff);
 		}
 		for (int i = 0; i < 20; i++)
 		{

@@ -8,46 +8,61 @@
 #include <semaphore.h>
 #include <iostream>
 #include <cstdlib>
-
-#define NUMBER_OF_CARS 50
+#include <stdlib.h>
+#define NUMBER_OF_CARS 10
 #define MAX_WAITING_CARS 10
 
+using namespace std;
+
+//log file names//
+string fFile = "flagPerson.log";
+string tFile = "cars.log";
+
+/*Member Functions*/
 int pthread_sleep(int seconds);
 void* criticalSection(void* args);
 void* makeCar(void* args);
 
+/*declarations for logging functions*/
+inline void* tlog_header();
+inline void* flog_header();
+inline void tLog(string logMsg);
+inline void fLog(string logMsg);
+inline void tLog_ID(int carID);
+inline void tLog_MSG(string logMsg);
+inline void tLog_endl();
+inline void tLog_time();
+inline string getTime();
+char buffer;
 
-//global variable declarations
+
+/*global variable declarations*/
 volatile int waiting;
 volatile char direction = '-';
-volatile int carCount(0);
+volatile int carCount(1);
 volatile bool first_t = true;
 volatile unsigned int wNorth(0);
 volatile unsigned int wSouth(0);
 volatile bool dSwitch = true; //True: North False: south
+queue<string> arrTimes;
 
-
-//semaphores and mutex
+/*semaphores and mutex*/
 sem_t flag;
-sem_t ques;
-
-pthread_mutex_t quem;
-pthread_mutex_t csmtx;//critical section mutex
-
-/**
-struct carg{
-	char direction;
-};
-
-*/
-
-using namespace std;
+pthread_mutex_t csmtx;
+sem_t makerSem;
+pthread_mutex_t makerMtx;
 
 
 int main(){
 	
+	 flog_header();
+	 tlog_header();
+	 
 	 sem_init(&flag, 0, 0);
 	 pthread_mutex_init(&csmtx,NULL);
+	 
+	 sem_init(&makerSem, 0, (unsigned int)1);
+	 pthread_mutex_init(&makerMtx, NULL);
  
 	 //make the critical section thread
 	 srand(time(NULL));
@@ -57,12 +72,10 @@ int main(){
 				perror("error making critical section thread");
 				return -1;
 			} 
-	
+		
 	 //make the north generator
-	 
 	 char* nArg = "N";	  
-	 pthread_t makeNorth;
-	 
+	 pthread_t makeNorth; 
 	 if ( -1 == pthread_create(&makeNorth, NULL, &makeCar, (void*)nArg ))
 		{
 			perror("error making north car generator");
@@ -70,8 +83,6 @@ int main(){
 		} 
 				
 	 //make the south generator
-	 
-	 
 	 char* sArg = "S";
 	 pthread_t makeSouth;
 	 if ( -1 == pthread_create(&makeSouth, NULL, &makeCar, &sArg )){
@@ -79,10 +90,8 @@ int main(){
 			return -1;
 		}
 
-		
-	
-	
 	 pthread_join(crit_s_thread, NULL);
+	 /* just cancel the two infinite threads*/
 	 pthread_cancel(makeSouth);	
 	 pthread_cancel(makeNorth);
 	
@@ -90,17 +99,26 @@ int main(){
 	 sem_destroy(&flag);
      pthread_mutex_destroy(&csmtx);
 	 
-	 cout<< wNorth << " " << wSouth <<endl;
+	 
 	return 0;
 }
 
 
-
-
+/**
+ *@brief criticalSection(void* args) -  This function is the main critical
+ *			section of this program.  It uses a single semaphore and mutex
+ *			to lock the section while the thread is moving through it.  
+ *			It provides logic and functionality to watch for incoming 
+ *			"cars" and properly orders them for processing througn the
+ *			critical section choke point.
+ *@param void* args - void pointer passed to function via pthread_create(), 
+ *						it has no usage in this function.
+ *@return - n/a
+ */ 
 void* criticalSection(void* args){
  
-  while(carCount < NUMBER_OF_CARS){
-	  
+  while((carCount <= NUMBER_OF_CARS ) ){
+	/* basic error catching to ensure the first thread in gets the lock*/ 
     if(first_t){
 	   first_t = false; 
 	   pthread_mutex_lock(&csmtx);
@@ -109,61 +127,138 @@ void* criticalSection(void* args){
       pthread_mutex_lock(&csmtx);  
     }//logic block for making threads wait 
 	
-     /////////START CRITICAL SECTION////////////////
-	 
-	 
-	 
-	 if(!wNorth && !wSouth){
-		 //log sleeping
-		cout<< "I SLEEP...\n";
-		while(!(wNorth || wSouth)){}
-		cout << "I HAVE AWOKEN...\n";
+     ////////////START CRITICAL SECTION////////////////
+	  		
+		/*Another basic switching mechanism to figure out when
+				to sleep & log and which side a new car is coming from */
+	 if(!wNorth && !wSouth)
+	 {
+		fLog("Asleep");
+		cout<< "flagPerson: I SLEEP...\n";
+		while(!(wNorth || wSouth)){} //wait while nothing is there
+		cout << "flagPerson: I HAVE AWOKEN...\n";
+		fLog("Awake");
 		if(wNorth)
 			dSwitch = true;
 		else
 			dSwitch = false;
-		}
+	 }
 	 else if( (dSwitch && wSouth >= MAX_WAITING_CARS) || !wNorth)
 		 dSwitch = !dSwitch;
 	 else if( (!dSwitch && wNorth >= MAX_WAITING_CARS) || !wSouth)
 		 dSwitch = !dSwitch;
-	 
-	 
-	 
 	
+	
+	/* basic switching mechanism to declare a direction for logging */
 	char myDir;
 	if(dSwitch)//if current traveling direction is north
 	{	
 		myDir = 'N';
+		
 	}
 	else{
 		myDir = 'S';
 	}
-	 
-	 
-	if(myDir == 'N' && wNorth !=0)
+	
+	
+	
+	/* more basic error catching to prevent 
+	   unsigned vars from going to numerical limit */
+	int myCarCount = carCount;
+	if(myDir == 'N' && wNorth !=0){
+		string this_cars_arrival_time;
+     	this_cars_arrival_time = arrTimes.front();
+    	arrTimes.pop();
+		tLog_ID(myCarCount);
+		tLog_MSG("\t N \t");
+		tLog_MSG(this_cars_arrival_time);
+		tLog_time();
 		wNorth--;
-	else if(myDir == 'S' && wSouth !=0)
+		carCount++;	
+		cout<<"Car number " << myCarCount <<" pulling through..DIR: "<<myDir<<"\n";
+		pthread_sleep(2);
+		cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
+		tLog_time();//exit time
+		tLog_endl();		
+	}
+	else if(myDir == 'S' && wSouth !=0){	
+
+        string this_cars_arrival_time;
+	    this_cars_arrival_time = arrTimes.front();
+	    arrTimes.pop();
+		tLog_ID(myCarCount);
+		tLog_MSG("\t S \t");
+		tLog_MSG(this_cars_arrival_time);
+		tLog_time();
 		wSouth--;
+	    carCount++;	
+        cout<<"Car number " << myCarCount <<" pulling through..DIR: "<<myDir<<"\n";
+        pthread_sleep(2);
+        cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
+		tLog_time();//exit time
+		tLog_endl();
+		
+	}
 	
-    //cars that exist and are going through//
-    
-	
-    int myCarCount = carCount;
-	carCount++;	
-    cout<<"Car number " << myCarCount <<" pulling through..DIR: "<<myDir<<"\n";
-    pthread_sleep(2);
-    cout<<"Car number " << myCarCount<<" is leaving(3 seconds later)\n";
- 
    pthread_mutex_unlock(&csmtx);
-   sem_post(&flag);  
-   cout << wNorth << " " << wSouth <<"\n";   
+   sem_post(&flag);
+   
+   
+	/* This is just to prevent more cars being made */
+   if(carCount > NUMBER_OF_CARS && !wNorth && !wSouth)
+	   break;  
   }
   return NULL;
 } 
 
 
 
+/**
+ *@brief threaded function to generate incoming "cars"
+ *@param void* args - void pointer to input from pthread_create(), in 
+						in this function, args contains the address
+						to a char** containing the thread's directional seed 
+						and is then dereferenced in order to increment the
+						proper direction's "queue" integer.  Two threads
+						operate within those code independently, but
+						concurrently and in different directions.
+ *@return n/a
+*/ 
+void* makeCar(void* args){
+	
+	int i(0);
+	while(1){	
+		pthread_sleep(2);//just to prevent hundreds of thousands of cars
+    	char* direction;
+    	direction = (char*)args;//typecasting & asignment
+    	  srand(time(NULL) + i);//seed rand with new seed
+    	  if(8 >= rand() % 10 + 1){ //80% chance
+			sem_wait(&makerSem);//get lock and sem so cars are in time order
+			pthread_mutex_lock(&makerMtx);			
+    	    	if(*direction == 'N')
+				{
+    	    		++wNorth;
+    	    	}
+				else{
+    	    		++wSouth;	
+				}
+			arrTimes.push(getTime());	
+			pthread_mutex_unlock(&makerMtx);
+			sem_post(&makerSem);			
+    	  }
+		  else
+    		pthread_sleep(20);
+	
+	    i++;	
+	}	
+	return NULL;
+}
+
+
+
+/**
+ *@brief sleep function provided by Dr. Yingwu Zhu, Seattle Universtiy
+ */
 int pthread_sleep(int seconds){    
     pthread_mutex_t mutex;      
 	pthread_cond_t conditionvar; 
@@ -182,30 +277,74 @@ int pthread_sleep(int seconds){
 
 
 
-void* makeCar(void* args){
-	int i(0);
-	while(1){
-		
-		pthread_sleep(2);//just to prevent hundreds of thousands of cars
-    	char* direction;
-    	direction = (char*)args;
 
-    	  srand(time(NULL) + i);
-    	  if(8 >= rand() % 10 + 1){ 
-    	    	if(*direction == 'N')
-    	    		++wNorth;
-    	    	else
-    	    		++wSouth;
-    	  }else
-    		pthread_sleep(20);
+/******************************************
+ *
+ *          LOGGING FUNCTIONS
+ *
+ ******************************************/
+ 
+/*flagger's log header*/
+inline void* flog_header(){   
+      ofstream ffs(fFile.c_str(), ios_base::out | ios_base::app );
+      ffs<<"Time \t\t State\n";
+      ffs.close();
+    return NULL;
+}
+
+/*thread log header*/
+inline void* tlog_header(){ 
+    std::ofstream tfs(tFile.c_str(), ios_base::out | ios_base::app );
+    tfs<<"carID\tDir\t  Arrival-Time Start-Time\tEnd-Time\n";
+    tfs.close();
+  return NULL; 
+}
+
+inline void fLog( std::string logMsg ){
+    std::string now = getTime(); 
+    std::ofstream ofs(fFile.c_str(), std::ios_base::out | std::ios_base::app );
+    ofs << now << "\t" << logMsg << std::endl;
+    ofs.close();
+}
+
+inline void tLog_time(){
+
+    std::string now = getTime();
+    std::ofstream ofs(tFile.c_str(), std::ios_base::out | std::ios_base::app );
+    ofs << now << "\t";
+    ofs.close();
 	
-	    i++;	
-	}
+}
+
+inline void tLog_ID(int carID){
+	std::ofstream ofs(tFile.c_str(), std::ios_base::out | std::ios_base::app );
+    ofs << carID << "\t";
+    ofs.close();
+}
+
+inline void tLog_MSG(string logMsg){
+	std::ofstream ofs(tFile.c_str(), std::ios_base::out | std::ios_base::app );
+    ofs << logMsg <<"\t";
+    ofs.close();
 	
-	return NULL;
 }
 
 
+inline void tLog_endl(){  
+    std::ofstream ofs(tFile.c_str(), std::ios_base::out | std::ios_base::app );
+    ofs<<endl;
+    ofs.close();
+}
 
+	
 
+string getTime()
+{
+    time_t tanD = time(nullptr);
+    char buff[20];
+    struct tm *sTm = localtime(&tanD); 
+    strftime(buff, sizeof(buff), "%H:%M:%S", sTm);   
+    std::string now(buff);   
+    return now; 
+} 
 

@@ -51,8 +51,9 @@ class FileSys {
   private:
     BasicFileSys bfs;	// basic file system
     short curr_dir;	// current directory
-
+	short home_dir; // home directory
     int fs_sock;  // file server socket
+	
 
     // Additional private variables and Helper functions - if desired
 };

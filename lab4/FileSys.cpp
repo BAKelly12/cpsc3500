@@ -31,7 +31,7 @@ void FileSys::mkdir(const char *name)
 {
 	//Load current directory
 	struct dirblock_t currentDir;
-	read_block(curr_dir, (void*) &currentDir)
+	bfs.read_block(curr_dir, (void*) &currentDir);
 	
 	//Create inode in memory	
 	short inodeEntry = bfs.get_free_block(); //inode
@@ -44,26 +44,28 @@ void FileSys::mkdir(const char *name)
 	
 	//Update inode spot in current directory
 	currentDir.num_entries++;
-	currentDir.dir_entries[currentFolder.num_entries].name = name;
-	currentDir.dir_entries[currentFolder.num_entries].block_num = inodeEntry;
+	strcpy (currentDir.dir_entries[currentDir.num_entries].name, name);
+	currentDir.dir_entries[currentDir.num_entries].block_num = inodeEntry;
 	
 	//Create the directory entry in current directory entries
 	short dirEntry = bfs.get_free_block();
 	
 	struct dirblock_t newDir;
+	const char* parentDir = "..";
+	const char* currentDirEntry = ".";
 	newDir.magic = DIR_MAGIC_NUM;
 	newDir.num_entries = 2;
 	//directory entry to the parent
 	newDir.dir_entries[0].block_num = curr_dir;
-	newDir.dir_entries[0].name = "..";
+	strcpy (newDir.dir_entries[0].name, parentDir);
 	//directory entry to itself
 	newDir.dir_entries[1].block_num = dirEntry;
-	newDir.dir_entries[1].name = '.';
+	strcpy (newDir.dir_entries[1].name, currentDirEntry);
 
 	//Update new directory in current directory entries
 	currentDir.num_entries++;
-	currentDir.dir_entries[currentFolder.num_entries].name = name;
-	currentDir.dir_entries[currentFolder.num_entries].block_num = dirEntry;
+	strcpy (currentDir.dir_entries[currentDir.num_entries].name, name);
+	currentDir.dir_entries[currentDir.num_entries].block_num = dirEntry;
 	
 	//Write updates
 	bfs.write_block(curr_dir, (void*) &currentDir); //this is wrong but right concept?
@@ -77,15 +79,15 @@ void FileSys::cd(const char *name)
 {
 	//load the current directory
 	struct dirblock_t currentDir;
-	read_block(curr_dir, (void*) &currentDir)
+	bfs.read_block(curr_dir, (void*) &currentDir);
 	
 	//Search current directory for the directory we want to switch to.
-	for (int i = 0; i < currentDir.num_entries; i++) {
+	for (unsigned int i = 0; i < currentDir.num_entries; i++) {
 		
 		if (currentDir.dir_entries[i].name == name)
 		{
 			curr_dir = currentDir.dir_entries[i].block_num;
-			return NULL;
+			return;
 		}
 	}
 	
@@ -119,9 +121,9 @@ void FileSys::ls()
 		cout << "empty folder" << endl;
 	//Go through each entry, output each entry name.
 	else {
-		for (int i = 0; i < currentFolder.num_entries; i++) {
+		for (unsigned int i = 0; i < currentDir.num_entries; i++) {
 			//Loop here to go through the whole name, just a single character right now.
-			cout << currentFolder.dir_entries[i].name << " ";
+			cout << currentDir.dir_entries[i].name << " ";
 		}
 		cout << endl;
 	}
@@ -143,8 +145,8 @@ void FileSys::create(const char *name)
 	
 	//Index new file in directory
 	currentDir.num_entries++;
-	currentDir.dir_entries[currentFolder.num_entries].name = name;
-	currentDir.dir_entries[currentFolder.num_entries].block_num = inodeEntry;
+	strcpy (currentDir.dir_entries[currentDir.num_entries].name, name);
+	currentDir.dir_entries[currentDir.num_entries].block_num = inodeEntry;
 	
 	bfs.write_block(curr_dir, (void*) &currentDir);
 	//this seems like an append to currentFolder.dir? need to come back to this
@@ -153,9 +155,9 @@ void FileSys::create(const char *name)
 // append data to a data file
 void FileSys::append(const char *name, const char *data)
 {
-	short dataEntry = bfs.get_free_block();
+	//short dataEntry = bfs.get_free_block();
 	
-	struct datablock_t newData;
+	//struct datablock_t newData;
 }
 
 // CAT IS READY FOR TESTING
@@ -166,9 +168,10 @@ void FileSys::cat(const char *name)
 	struct dirblock_t currentDir;
 	bfs.read_block(curr_dir, (void*) &currentDir);
 	
-	int counter = 0;
+	unsigned int counter = 0;
 	//find inode info
-	for (int i = 0; i < currentDir.num_entries; i++)
+	for (unsigned int i = 0; i < currentDir.num_entries; i++)
+	{
 		if (currentDir.dir_entries[i].name == name)
 		{
 			//load inode in.
@@ -178,7 +181,7 @@ void FileSys::cat(const char *name)
 			
 			//See how many blosk we will be reading from
 			int totalReadBlocks = tempInode.size / 128;
-			if (n % BLOCK_SIZE > 0) 
+			if (tempInode.size % BLOCK_SIZE > 0) 
 					totalReadBlocks++;
 			
 			for (int i = 0; i < totalReadBlocks; i++)
@@ -191,8 +194,8 @@ void FileSys::cat(const char *name)
 				{
 					//If it hits the correct number of bytes..
 					if (counter == tempInode.size)
-						return NULL;
-					cout << tempData.data[i] 
+						return;
+					cout << tempData.data[i];
 					counter++;
 				}				
 			}
@@ -209,8 +212,9 @@ void FileSys::head(const char *name, unsigned int n)
 	bfs.read_block(curr_dir, (void*) &currentDir);
 	
 	//find inode info
-	int counter = 0;
-	for (int i = 0; i < currentDir.num_entries; i++)
+	unsigned int counter = 0;
+	for (unsigned int i = 0; i < currentDir.num_entries; i++)
+	{
 		if (currentDir.dir_entries[i].name == name)
 		{
 			//load inode in.
@@ -222,7 +226,7 @@ void FileSys::head(const char *name, unsigned int n)
 			if (n > tempInode.size)
 			{
 				perror("The n bytes entered exceeds the size of the file");
-				return NULL;			
+				return;			
 			}
 			
 			
@@ -242,14 +246,15 @@ void FileSys::head(const char *name, unsigned int n)
 				{
 					//If it hits the correct number of bytes..
 					if (counter == n)
-						return NULL;
-					cout << tempData.data[i] 
+						return;
+					cout << tempData.data[i];
 					counter++;
 				}				
 			}
 		}
 	}
 }
+
 
 // delete a data file
 void FileSys::rm(const char *name)
@@ -263,13 +268,13 @@ void FileSys::stat(const char *name)
 {
 	struct dirblock_t currentDir;
 	bfs.read_block(curr_dir, (void*) &currentDir);
-	for (int i = 0; i < currentDir.num_entries; i++)
+	for (unsigned int i = 0; i < currentDir.num_entries; i++)
 	{	
 		if (currentDir.dir_entries[i].name == name)
 		{
 			//load inode/directory in
-			struct inode_t tempInode;
-			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempBlock)
+			struct inode_t tempBlock;
+			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempBlock);
 			
 			if (tempBlock.magic == 0xFFFFFFFE) //Check to see if it is an inode
 			{
@@ -280,7 +285,7 @@ void FileSys::stat(const char *name)
 			
 				//Number of blocks
 				int tempNumBlocks;
-				tempNumBlock = tempBlock.size / BLOCK_SIZE; // Count how many blocks are full
+				tempNumBlocks = tempBlock.size / BLOCK_SIZE; // Count how many blocks are full
 				if (tempBlock.size % BLOCK_SIZE > 0) //Check to see if any are partially full, if so increment var.
 					tempNumBlocks++;
 				tempNumBlocks++; // Account for inode being part of it.
@@ -291,10 +296,10 @@ void FileSys::stat(const char *name)
 				if (tempBlock.size == 0)
 					tempFirstBlock = 0;
 				else
-					tempFirstBlock = tempInode.blocks[0]
+					tempFirstBlock = tempBlock.blocks[0];
 			
 				cout << "First block: " << tempFirstBlock << endl;
-				return NULL;
+				return;
 			}
 			
 			else if (tempBlock.magic == 0xFFFFFFFF) //check to see if it is a directory
@@ -302,7 +307,7 @@ void FileSys::stat(const char *name)
 				//THE FOLLOWING IS DIRECTORY INFORMATION
 				cout << "Directory name: " << currentDir.dir_entries[i].name << endl;
 				cout << "Directory block: " << currentDir.dir_entries[i].block_num << endl;
-				return NULL;
+				return;
 			}
 			
 			else //Something isnt right.

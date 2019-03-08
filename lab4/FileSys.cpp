@@ -103,22 +103,7 @@ void FileSys::home()
 // remove a directory
 void FileSys::rmdir(const char *name)
 {
-	//reduce number of directories in the
-	short victimDir
-	
-	for (int i = 0; i < currentFolder.num_entries; i++) {
-		if (currentFolder.dir_entries[i].name == name)
-		{
-			currentFolder.num_entries--;
-			victimDir = currentFolder.dir_entries[i].block_num;
-			
-			bfs.reclaim_block(victimDir);
-			return NULL;
-		}
-	}
-	
-	
-	perror("Directory not found.");
+
 }
 
 // LS IS READY FOR TESTING
@@ -173,12 +158,49 @@ void FileSys::append(const char *name, const char *data)
 	struct datablock_t newData;
 }
 
+// CAT IS READY FOR TESTING
 // display the contents of a data file
 void FileSys::cat(const char *name)
 {
+	//load current directory
+	struct dirblock_t currentDir;
+	bfs.read_block(curr_dir, (void*) &currentDir);
 	
+	int counter = 0;
+	//find inode info
+	for (int i = 0; i < currentDir.num_entries; i++)
+		if (currentDir.dir_entries[i].name == name)
+		{
+			//load inode in.
+			struct inode_t tempInode;
+			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempInode);
+			//We are in inode now. Look through data.
+			
+			//See how many blosk we will be reading from
+			int totalReadBlocks = tempInode.size / 128;
+			if (n % BLOCK_SIZE > 0) 
+					totalReadBlocks++;
+			
+			for (int i = 0; i < totalReadBlocks; i++)
+			{
+				//Load a block of data into memory
+				struct datablock_t tempData;
+				bfs.read_block(tempInode.blocks[i], (void*) &tempData);
+				
+				for (int i = 0; i < 128; i++);
+				{
+					//If it hits the correct number of bytes..
+					if (counter == tempInode.size)
+						return NULL;
+					cout << tempData.data[i] 
+					counter++;
+				}				
+			}
+		}
+	}
 }
 
+// HEAD IS READY FOR TESTING
 // display the first N bytes of the file
 void FileSys::head(const char *name, unsigned int n)
 {
@@ -187,16 +209,46 @@ void FileSys::head(const char *name, unsigned int n)
 	bfs.read_block(curr_dir, (void*) &currentDir);
 	
 	//find inode info
+	int counter = 0;
 	for (int i = 0; i < currentDir.num_entries; i++)
 		if (currentDir.dir_entries[i].name == name)
 		{
 			//load inode in.
 			struct inode_t tempInode;
-			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempInode)
+			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempInode);
+			//We are in inode now. Look through data.
+			
+			//Ensure you can display n bytes and that it doesnt exceed the bytes a file has.
+			if (n > tempInode.size)
+			{
+				perror("The n bytes entered exceeds the size of the file");
+				return NULL;			
+			}
 			
 			
+			//See how many blosk we will be reading from
+			//Unnecessary, could just do some large number, but this keeps things logical.
+			int totalReadBlocks = n / 128;
+			if (n % BLOCK_SIZE > 0) 
+					totalReadBlocks++;
+			
+			for (int i = 0; i < totalReadBlocks; i++)
+			{
+				//Load a block of data into memory
+				struct datablock_t tempData;
+				bfs.read_block(tempInode.blocks[i], (void*) &tempData);
+				
+				for (int i = 0; i < 128; i++);
+				{
+					//If it hits the correct number of bytes..
+					if (counter == n)
+						return NULL;
+					cout << tempData.data[i] 
+					counter++;
+				}				
+			}
 		}
-	
+	}
 }
 
 // delete a data file
@@ -205,6 +257,7 @@ void FileSys::rm(const char *name)
 	
 }
 
+// STAT IS READY FOR TESTING
 // display stats about file or directory
 void FileSys::stat(const char *name)
 {

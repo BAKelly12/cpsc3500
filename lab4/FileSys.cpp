@@ -182,22 +182,80 @@ void FileSys::cat(const char *name)
 // display the first N bytes of the file
 void FileSys::head(const char *name, unsigned int n)
 {
+	//load current directory
+	struct dirblock_t currentDir;
+	bfs.read_block(curr_dir, (void*) &currentDir);
+	
+	//find inode info
+	for (int i = 0; i < currentDir.num_entries; i++)
+		if (currentDir.dir_entries[i].name == name)
+		{
+			//load inode in.
+			struct inode_t tempInode;
+			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempInode)
+			
+			
+		}
 	
 }
 
 // delete a data file
 void FileSys::rm(const char *name)
 {
-	if (remove(name) == 0)
-		//Data file removed/deleted...
-	else	
-		printf("Error in deleting a data file..");
+	
 }
 
 // display stats about file or directory
 void FileSys::stat(const char *name)
 {
+	struct dirblock_t currentDir;
+	bfs.read_block(curr_dir, (void*) &currentDir);
+	for (int i = 0; i < currentDir.num_entries; i++)
+	{	
+		if (currentDir.dir_entries[i].name == name)
+		{
+			//load inode/directory in
+			struct inode_t tempInode;
+			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempBlock)
+			
+			if (tempBlock.magic == 0xFFFFFFFE) //Check to see if it is an inode
+			{
+				//THE FOLLOWING IS INODE INFORMATION
+				// Inode block and bytes in file.
+				cout << "Inode block: " << currentDir.dir_entries[i].block_num << endl;
+				cout << "Bytes in file: " << tempBlock.size << endl;
+			
+				//Number of blocks
+				int tempNumBlocks;
+				tempNumBlock = tempBlock.size / BLOCK_SIZE; // Count how many blocks are full
+				if (tempBlock.size % BLOCK_SIZE > 0) //Check to see if any are partially full, if so increment var.
+					tempNumBlocks++;
+				tempNumBlocks++; // Account for inode being part of it.
+				cout << "Number of blocks: " << tempNumBlocks << endl;
+			
+				//First block
+				int tempFirstBlock;
+				if (tempBlock.size == 0)
+					tempFirstBlock = 0;
+				else
+					tempFirstBlock = tempInode.blocks[0]
+			
+				cout << "First block: " << tempFirstBlock << endl;
+				return NULL;
+			}
+			
+			else if (tempBlock.magic == 0xFFFFFFFF) //check to see if it is a directory
+			{
+				//THE FOLLOWING IS DIRECTORY INFORMATION
+				cout << "Directory name: " << currentDir.dir_entries[i].name << endl;
+				cout << "Directory block: " << currentDir.dir_entries[i].block_num << endl;
+				return NULL;
+			}
+			
+			else //Something isnt right.
+				perror("There is an issue in stats.");
+		}
+	}
 }
 
 // HELPER FUNCTIONS (optional)
-

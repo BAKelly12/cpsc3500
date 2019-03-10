@@ -45,22 +45,6 @@ int main(int argc, char* argv[]) {
       cout << server.message<<endl;
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     //close the listening socket
     
     server.unbind();
@@ -72,4 +56,49 @@ int main(int argc, char* argv[]) {
     /*Close the socket*/
 
     return 0;
+}
+
+void parseAndCall(string message)
+{
+	int sizeOfString = message.length();
+	string command;
+	const int ending = 4;
+	if (message[0] == 'm') {
+		command = message.substr (6, length - 6 - ending);
+		fs.mkdir(command);
+	}
+	else if (message[0] == 'c' && message[1] == 'd') {
+		command = message.substr (3, length - 3 - ending);
+		fs.cd(command);
+	}
+	else if (message[0] == 'h'){
+		fs.home();
+	}
+	else if (message[0] == 'r' && message[1] == 'm' && message[2] == 'd') {
+		command = message.substr (6, length - 6 - ending);
+		fs.rmdir(command);
+	}
+	else if (message[0] == 'l') {
+		fs.ls();
+	}
+	else if (message[0] == 'c' && message[1] == 'r') {
+		command = message.substr (7, length - 7 - ending);
+		fs.create(command);
+	}
+	//APPEND QUESTIONS
+	else if (message[0] == 'c' && message[1] == 'a') {
+		command = message.substr (4, length - 4 - ending);
+		fs.cat(command);
+	}
+	//HEAD QUESTIONS
+	else if (mesage[0] == 'r' && message[1] == 'm' && message[3] == ' ') {
+		command = message.substr (3, length - 3 - ending);
+		fs.rm(command);
+	}
+	else if (message[0] = 's') {
+		command = message.substr (5, length - 5 - ending);
+		fs.stat(command)
+	}
+	else 
+		cout << "ERROR EXITING HELP";	
 }

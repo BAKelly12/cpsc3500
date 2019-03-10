@@ -15,7 +15,9 @@
 using namespace std;
 
 void cleanExit(){exit(0);}
+void parseAndCall(string s);
 
+FileSys fs;
 int main(int argc, char* argv[]) {
 	if (argc < 2) {
 		cerr << "Usage: ./nfsserver port#\n";
@@ -29,7 +31,6 @@ int main(int argc, char* argv[]) {
       exit(EXIT_FAILURE); 
 
     //mount the file system
-    FileSys fs;
     fs.mount(server.newSock); //assume that sock is the new socket created 
                     //for a TCP connection between the client and the server.   
  
@@ -64,40 +65,40 @@ void parseAndCall(string message)
 	string command;
 	const int ending = 4;
 	if (message[0] == 'm') {
-		command = message.substr (6, length - 6 - ending);
-		fs.mkdir(command);
+		command = message.substr (6, sizeOfString - 6 - ending);
+		fs.mkdir(command.c_str());
 	}
 	else if (message[0] == 'c' && message[1] == 'd') {
-		command = message.substr (3, length - 3 - ending);
-		fs.cd(command);
+		command = message.substr (3, sizeOfString - 3 - ending);
+		fs.cd(command.c_str());
 	}
 	else if (message[0] == 'h'){
 		fs.home();
 	}
 	else if (message[0] == 'r' && message[1] == 'm' && message[2] == 'd') {
-		command = message.substr (6, length - 6 - ending);
-		fs.rmdir(command);
+		command = message.substr (6, sizeOfString - 6 - ending);
+		fs.rmdir(command.c_str());
 	}
 	else if (message[0] == 'l') {
 		fs.ls();
 	}
 	else if (message[0] == 'c' && message[1] == 'r') {
-		command = message.substr (7, length - 7 - ending);
-		fs.create(command);
+		command = message.substr (7, sizeOfString - 7 - ending);
+		fs.create(command.c_str());
 	}
 	//APPEND QUESTIONS
 	else if (message[0] == 'c' && message[1] == 'a') {
-		command = message.substr (4, length - 4 - ending);
-		fs.cat(command);
+		command = message.substr (4, sizeOfString - 4 - ending);
+		fs.cat(command.c_str());
 	}
 	//HEAD QUESTIONS
-	else if (mesage[0] == 'r' && message[1] == 'm' && message[3] == ' ') {
-		command = message.substr (3, length - 3 - ending);
-		fs.rm(command);
+	else if (message[0] == 'r' && message[1] == 'm' && message[3] == ' ') {
+		command = message.substr (3, sizeOfString - 3 - ending);
+		fs.rm(command.c_str());
 	}
-	else if (message[0] = 's') {
-		command = message.substr (5, length - 5 - ending);
-		fs.stat(command)
+	else if (message[0] == 's') {
+		command = message.substr (5, sizeOfString - 5 - ending);
+		fs.stat(command.c_str());
 	}
 	else 
 		cout << "ERROR EXITING HELP";	

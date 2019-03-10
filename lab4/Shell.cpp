@@ -89,15 +89,15 @@ void Shell::mkdir_rpc(string dname)
   
   int bytes_sent(0);
   
-  string comm = "mkdir " + dname + "\r\n";
+  string mkdir = "mkdir " + dname + "\r\n";
   
-  comm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"mkdir size: " << sizeof(comm)<<endl;
+  mkdir.resize(PACKET_MAX_SIZE,'0');
+  cout<<"mkdir size: " << sizeof(mkdir)<<endl;
 	if(cs_sock != -1) 
 	{
-      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      if(( bytes_sent=send(cs_sock , mkdir.c_str() , strlen( mkdir.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << comm << endl;
+        cout << "Send failed : " << mkdir << endl;
         exit(EXIT_FAILURE);
       }
 
@@ -106,7 +106,7 @@ void Shell::mkdir_rpc(string dname)
       exit(EXIT_FAILURE);
  
  
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<"\n";
 	return;
   
 }
@@ -117,15 +117,15 @@ void Shell::cd_rpc(string dname) {
   
   int bytes_sent(0);
   
-  string comm = "cd " + dname + "\r\n";
+  string cd = "cd " + dname + "\r\n";
   
-  comm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"cd size: " << sizeof(comm)<<endl;
+  cd.resize(PACKET_MAX_SIZE,'0');
+  cout<<"cd size: " << sizeof(cd)<<endl;
 	if(cs_sock != -1) 
 	{
-      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      if(( bytes_sent=send(cs_sock , cd.c_str() , strlen( cd.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << comm << endl;
+        cout << "Send failed : " << cd << endl;
         exit(EXIT_FAILURE);
       }
 
@@ -145,16 +145,16 @@ void Shell::home_rpc() {
   
   int bytes_sent(0);
   
-  string comm = "home\r\n";
+  string home = "home\r\n";
   
-  comm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"home size: " << sizeof(comm)<<endl;
+  home.resize(PACKET_MAX_SIZE,'0');
+  cout<<"home size: " << sizeof(home)<<endl;
   
 	if(cs_sock != -1) 
 	{
-      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      if(( bytes_sent=send(cs_sock , home.c_str() , strlen( home.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << comm << endl;
+        cout << "Send failed : " << home << endl;
         exit(EXIT_FAILURE);
       }
 
@@ -171,18 +171,18 @@ void Shell::home_rpc() {
 
 // Remote procedure call on rmdir
 void Shell::rmdir_rpc(string dname) {
-   
+  
   int bytes_sent(0);
   
-  string comm = "rmdir " + dname + "\r\n";
+  string rmdir = "rmdir " + dname + "\r\n";
   
-  comm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"rmdir size: " << sizeof(comm)<<endl;
+  rmdir.resize(PACKET_MAX_SIZE,'0');
+  cout<<"rmdir size: " << sizeof(rmdir)<<endl;
 	if(cs_sock != -1) 
 	{
-      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      if(( bytes_sent=send(cs_sock , rmdir.c_str() , strlen( rmdir.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << comm << endl;
+        cout << "Send failed : " << rmdir << endl;
         exit(EXIT_FAILURE);
       }
 
@@ -202,15 +202,15 @@ void Shell::ls_rpc() {
     
   int bytes_sent(0);
   
-  string comm = "ls\r\n";
+  string ls = "ls\r\n";
   
-  comm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"ls size: " << sizeof(comm)<<endl;
+  ls.resize(PACKET_MAX_SIZE,'0');
+  cout<<"ls size: " << sizeof(ls)<<endl;
 	if(cs_sock != -1) 
 	{
-      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      if(( bytes_sent=send(cs_sock , ls.c_str() , strlen( ls.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << comm << endl;
+        cout << "Send failed : " << ls << endl;
         exit(EXIT_FAILURE);
       }
 
@@ -230,15 +230,15 @@ void Shell::create_rpc(string fname) {
     
   int bytes_sent(0);
   
-  string comm = "create " + fname + "\r\n";
+  string create = "create " + fname + "\r\n";
   
-  comm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"create size: " << sizeof(comm)<<endl;
+  create.resize(PACKET_MAX_SIZE,'0');
+  cout<<"create size: " << sizeof(create)<<endl;
 	if(cs_sock != -1) 
 	{
-      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      if(( bytes_sent=send(cs_sock , create.c_str() , strlen( create.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << comm << endl;
+        cout << "Send failed : " << create << endl;
         exit(EXIT_FAILURE);
       }
 
@@ -258,16 +258,16 @@ void Shell::append_rpc(string fname, string data) {
  
   int bytes_sent(0);
   
-  string comm = "append " + fname + "\r\n";
+  string append = "append " + fname + "\r\n";
   
-  comm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"cd size: " << sizeof(comm)<<endl;
+  append.resize(PACKET_MAX_SIZE,'0');
+  cout<<"cd size: " << sizeof(append)<<endl;
 	if(cs_sock != -1) 
 	{
-      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      if(( bytes_sent=send(cs_sock , append.c_str() , strlen( append.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << comm << endl;
-        exit(EXIT_FAILURE);
+        cout << "Send failed : " << append << endl;
+        exit(EXIT_FAILURE); 
       }
 
   }
@@ -278,29 +278,121 @@ void Shell::append_rpc(string fname, string data) {
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
 	return;
   //for this:
-  //send append, then on server if append, it will expect a number of bytes somehow
+  //send append, then on server if append, it will get ready to accept a number of bytes
+   //  somehow
   //then it will create something to take in that many bytes
+  //then let the client know its ready to accept
+  //then client begins send
   
 }
 
 // Remote procesure call on cat
 void Shell::cat_rpc(string fname) {
-  // to implement
+  
+  int bytes_sent(0);
+  
+  string cat = "cat " + fname + "\r\n";
+  
+  cat.resize(PACKET_MAX_SIZE,'0');
+  cout<<"cat size: " << sizeof(cat)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , cat.c_str() , strlen( cat.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << cat << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
 }
 
 // Remote procedure call on head
 void Shell::head_rpc(string fname, int n) {
-  // to implement
+  
+  
+   int bytes_sent(0);
+  
+  string head = "head " + fname + "\r\n";
+  
+  head.resize(PACKET_MAX_SIZE,'0');
+  cout<<"head size: " << sizeof(head)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , head.c_str() , strlen( head.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << head << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
+  //this still needs to be able to send the int
+  
 }
 
 // Remote procedure call on rm
 void Shell::rm_rpc(string fname) {
-  // to implement
+  int bytes_sent(0);
+  
+  string rm = "rm " + fname + "\r\n";
+  
+  rm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"rm size: " << sizeof(rm)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , rm.c_str() , strlen( rm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << rm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
 }
 
 // Remote procedure call on stat
 void Shell::stat_rpc(string fname) {
-  // to implement
+    int bytes_sent(0);
+  
+  string stat = "stat " + fname + "\r\n";
+  
+  stat.resize(PACKET_MAX_SIZE,'0');
+  cout<<"stat size: " << sizeof(stat)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , stat.c_str() , strlen( stat.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << stat << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
 }
 
 // Executes the shell until the user quits.
@@ -316,8 +408,11 @@ void Shell::run()
 
     // print prompt and get command line
     string command_str;
+    cin.clear();
     cout << PROMPT_STRING;
     getline(cin, command_str);
+  
+   
 
     // execute the command
     user_quit = execute_command(command_str);

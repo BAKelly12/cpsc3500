@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     TCP_SERVER server;
     
     if(server.knit(port)==-1)
-      exit(EXIT_FAILURE);
+      exit(EXIT_FAILURE); 
 
     //mount the file system
     FileSys fs;
@@ -39,13 +39,27 @@ int main(int argc, char* argv[]) {
     
 
     server.await();
-    for(int i(0); i<10;i++){
+    for(int i(0); i<5;i++){
       server.message.erase();
-      int x = server.sockread(PACKET_MAX_SIZE-1);
-      cout << server.message <<endl;
+      int x = server.sockread(PACKET_MAX_SIZE);
+      cout << server.message<<endl;
     }
     
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     //close the listening socket
     

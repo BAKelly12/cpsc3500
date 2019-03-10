@@ -78,11 +78,11 @@ int TCP_SERVER::sockread(size_t len)
     size_t count = len;
     char  *bufptr = (char*)buf;
     cerr<<"Reading from socket..\n";  
-    ssize_t bytes_received;
+    ssize_t bytes_received(0);
     while(count > 0)
    {
-       bytes_received = read(newSock, bufptr, count);
-       if (bytes_received <= 0)
+       bytes_received = read(newSock, bufptr, count); 
+       if (bytes_received <= 0) 
            return bytes_received;
         /* Decrement remaining size */  
         count -= bytes_received;  
@@ -92,7 +92,7 @@ int TCP_SERVER::sockread(size_t len)
         len+=bytes_received;
     }
     message = buf;
-    cout << endl<<"Bytes received: "<<bytes_received<<endl;
+    cout << endl<<"Bytes received: "<<bytes_received<<"\n";
     return len;
 }
 

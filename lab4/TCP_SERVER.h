@@ -49,7 +49,7 @@ class TCP_SERVER
       *@brief reads packet from socket, puts bits read in buf
       *@return total length of read
       */
-    int sockread(size_t len);
+    int sockread(size_t len); 
     
     
     /**

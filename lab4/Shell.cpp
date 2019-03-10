@@ -4,56 +4,283 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string.h>
+#include <cerrno>
+
+
 using namespace std;
 
 #include "Shell.h"
-
+#define SERVER_PORT "11242"
+#define PACKET_MAX_SIZE 32
 static const string PROMPT_STRING = "NFS> ";	// shell prompt
 
 // Mount the network file system with server name and port number in the format of server:port
 void Shell::mountNFS(string fs_loc) {
-	//create the socket cs_sock and connect it to the server and port specified in fs_loc
-	//if all the above operations are completed successfully, set is_mounted to true  
+  if(is_mounted){
+    cerr<<"FS Already Mounted..\n\n";
+    return;
+  }
+  cerr<"Initialize variables\n";
+  /*INIT VARS*/
+  struct addrinfo hints, *p, *servInfo;
+  bzero((char*) &servInfo, sizeof(servInfo));
+  bzero((char*) &hints, sizeof(hints));
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+
+
+  /*END OF CLIENT VARIABLE INIT*/
+  
+  /*GETADDRINFO*/
+  int rv(0);
+  cerr<<"GEtting address info..\n";
+  /*Get Server address information using hints and place it into servInfo*/
+  if((rv = getaddrinfo(fs_loc.c_str(), SERVER_PORT, &hints, &servInfo))<0){
+    cerr<<"Error resolving hostname.. Exit code: "<<gai_strerror(rv)<<"\n\n";
+    exit(EXIT_FAILURE);
+  }
+  cerr<<"Found server..\n\n";
+  /*END OF GETADDRINFO*/
+  
+  
+  /*DNS LOOKUP*/
+  for(p=servInfo; p!=NULL;p=p->ai_next){
+    if((cs_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol))<0){
+      cerr<<"Error creating socket..\n\n";
+      continue;
+    }   
+    if(connect(cs_sock, p->ai_addr, p->ai_addrlen)<0){
+      cerr<<"Error 418: I'm a teapot..\n\n";
+      continue;
+    }
+    break;
+  }
+  if(p == NULL){
+      cerr<<"client: Unable to connect to server..\n\n";
+      exit(EXIT_FAILURE);
+  }
+  //else
+  cerr<< "client: Connection Successful..\n\n";
+
+  /*END OF DNS LOOKUP*/
+  
+  is_mounted = true;
+  return;
 }
+
 
 // Unmount the network file system if it was mounted
 void Shell::unmountNFS() {
 	// close the socket if it was mounted
+  if(is_mounted){
+    if(close(cs_sock)){
+      cerr<<"Error closing socket..\n\n";
+      exit(EXIT_FAILURE);
+    }
+  }
+  is_mounted = false;
 }
 
+
 // Remote procedure call on mkdir
-void Shell::mkdir_rpc(string dname) {
-  // to implement
+void Shell::mkdir_rpc(string dname)  
+{
+  
+  int bytes_sent(0);
+  
+  string comm = "mkdir " + dname + "\r\n";
+  
+  comm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"mkdir size: " << sizeof(comm)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << comm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
 }
+ 
 
 // Remote procedure call on cd
 void Shell::cd_rpc(string dname) {
-  // to implement
+  
+  int bytes_sent(0);
+  
+  string comm = "cd " + dname + "\r\n";
+  
+  comm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"cd size: " << sizeof(comm)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << comm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
+  
 }
 
 // Remote procedure call on home
 void Shell::home_rpc() {
-  // to implement
+  
+  int bytes_sent(0);
+  
+  string comm = "home\r\n";
+  
+  comm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"home size: " << sizeof(comm)<<endl;
+  
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << comm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
+  
 }
 
 // Remote procedure call on rmdir
 void Shell::rmdir_rpc(string dname) {
-  // to implement
+   
+  int bytes_sent(0);
+  
+  string comm = "rmdir " + dname + "\r\n";
+  
+  comm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"rmdir size: " << sizeof(comm)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << comm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
+  
 }
 
 // Remote procedure call on ls
 void Shell::ls_rpc() {
-  // to implement
+    
+  int bytes_sent(0);
+  
+  string comm = "ls\r\n";
+  
+  comm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"ls size: " << sizeof(comm)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << comm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+
 }
 
 // Remote procedure call on create
 void Shell::create_rpc(string fname) {
-  // to implement
+  
+    
+  int bytes_sent(0);
+  
+  string comm = "create " + fname + "\r\n";
+  
+  comm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"create size: " << sizeof(comm)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << comm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  
+  
 }
 
 // Remote procedure call on append
 void Shell::append_rpc(string fname, string data) {
-  // to implement
+ 
+  int bytes_sent(0);
+  
+  string comm = "append " + fname + "\r\n";
+  
+  comm.resize(PACKET_MAX_SIZE,'0');
+  cout<<"cd size: " << sizeof(comm)<<endl;
+	if(cs_sock != -1) 
+	{
+      if(( bytes_sent=send(cs_sock , comm.c_str() , strlen( comm.c_str() ) , 0)) < 0)
+      {
+        cout << "Send failed : " << comm << endl;
+        exit(EXIT_FAILURE);
+      }
+
+  }
+    else
+      exit(EXIT_FAILURE);
+ 
+ 
+  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+	return;
+  //for this:
+  //send append, then on server if append, it will expect a number of bytes somehow
+  //then it will create something to take in that many bytes
+  
 }
 
 // Remote procesure call on cat

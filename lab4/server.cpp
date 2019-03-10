@@ -64,6 +64,7 @@ void parseAndCall(string message)
 	int sizeOfString = message.length();
 	string command;
 	const int ending = 4;
+	int numSpaces, counter; //For head and append parsing
 	if (message[0] == 'm') {
 		command = message.substr (6, sizeOfString - 6 - ending);
 		fs.mkdir(command.c_str());
@@ -72,7 +73,7 @@ void parseAndCall(string message)
 		command = message.substr (3, sizeOfString - 3 - ending);
 		fs.cd(command.c_str());
 	}
-	else if (message[0] == 'h'){
+	else if (message[0] == 'h' && message[1] == 'o'){
 		fs.home();
 	}
 	else if (message[0] == 'r' && message[1] == 'm' && message[2] == 'd') {
@@ -86,12 +87,38 @@ void parseAndCall(string message)
 		command = message.substr (7, sizeOfString - 7 - ending);
 		fs.create(command.c_str());
 	}
-	//APPEND QUESTIONS
+	else if (message[0] == 'a') {
+		numSpaces = 0;
+		counter = 0;
+		string command2;
+		while(numSpaces != 2)
+		{
+			if (message[counter] == ' ')
+				numSpaces++;
+			counter++;
+		}
+		command = message.substr (7, counter - 7);
+		command2 = message.substr(counter + 1, sizeOfString - (counter + 1) - ending);
+		fs.append(command.c_str(), command2.c_str());
+	}
 	else if (message[0] == 'c' && message[1] == 'a') {
 		command = message.substr (4, sizeOfString - 4 - ending);
 		fs.cat(command.c_str());
 	}
-	//HEAD QUESTIONS
+	else if (message[0] == 'h' && message[1] == 'e') {
+		numSpaces = 0;
+		counter = 0;
+		string command2;
+		while(numSpaces != 2)
+		{
+			if (message[counter] == ' ')
+				numSpaces++;
+			counter++;
+		}
+		command = message.substr (5, counter - 5);
+		command2 = message.substr(counter + 1, sizeOfString - (counter + 1) - ending);
+		fs.head(command.c_str(), stoul (command2.c_str(), nullptr, 0));
+	}
 	else if (message[0] == 'r' && message[1] == 'm' && message[3] == ' ') {
 		command = message.substr (3, sizeOfString - 3 - ending);
 		fs.rm(command.c_str());

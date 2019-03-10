@@ -5,17 +5,23 @@
 #define SHELL_H
 
 #include <string>
+#include <unistd.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+
+
+
 
 // Shell
 class Shell {
 
   public:
     //constructor, do not change it!!
-    Shell() : cs_sock(-1), is_mounted(false) {   
+    Shell() : cs_sock(-1), is_mounted(false) {
+      
     }
 
     // Mount a network file system located in host:port, set is_mounted = true if success
@@ -31,12 +37,18 @@ class Shell {
     void run_script(char *file_name);
 
   private:
-    
+
     int cs_sock; //socket to the network file system server
 
-
     bool is_mounted; //true if the network file system is mounted, false otherise
-
+    
+    /*Added this for sending data in a fixed structure*/
+    struct Packet
+    {
+      string data;
+      int size;
+    };
+    
     // data structure for command line
     struct Command
     {
@@ -84,6 +96,9 @@ class Shell {
 
     // Remote procedure call on stat
     void stat_rpc(string fname); 
+    
+    private:
+    
 };
 
 #endif

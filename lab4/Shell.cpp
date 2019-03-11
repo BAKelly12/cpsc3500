@@ -34,11 +34,11 @@ void Shell::mountNFS(string fs_loc) {
   
   /*GETADDRINFO*/
   int rv(0);
-  cerr<<"GEtting address info..\n";
+  cerr<<"Getting address info..\n";
   /*Get Server address information using hints and place it into servInfo*/
   if((rv = getaddrinfo(fs_loc.c_str(), SERVER_PORT, &hints, &servInfo))<0){
     cerr<<"Error resolving hostname.. Exit code: "<<gai_strerror(rv)<<"\n\n";
-    exit(EXIT_FAILURE);
+    return;
   }
   cerr<<"Found server..\n\n";
   /*END OF GETADDRINFO*/
@@ -58,7 +58,7 @@ void Shell::mountNFS(string fs_loc) {
   }
   if(p == NULL){
       cerr<<"client: Unable to connect to server..\n\n";
-      exit(EXIT_FAILURE);
+      return;
   }
   //else
   cerr<< "client: Connection Successful..\n\n";
@@ -76,7 +76,7 @@ void Shell::unmountNFS() {
   if(is_mounted){
     if(close(cs_sock)){
       cerr<<"Error closing socket..\n\n";
-      exit(EXIT_FAILURE);
+      return;
     }
   }
   is_mounted = false;
@@ -89,7 +89,7 @@ void Shell::mkdir_rpc(string dname)
   
   int bytes_sent(0);
   
-  string mkdir = "mkdir " + dname + "\r\n";
+  string mkdir = "mkdir " + dname + "\\r\\n\r\n";
   
   mkdir.resize(PACKET_MAX_SIZE,'0');
   cout<<"mkdir size: " << sizeof(mkdir)<<endl;
@@ -98,16 +98,16 @@ void Shell::mkdir_rpc(string dname)
       if(( bytes_sent=send(cs_sock , mkdir.c_str() , strlen( mkdir.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << mkdir << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<"\n";
-	return;
+  return;
   
 }
  
@@ -117,7 +117,7 @@ void Shell::cd_rpc(string dname) {
   
   int bytes_sent(0);
   
-  string cd = "cd " + dname + "\r\n";
+  string cd = "cd " + dname + "\\r\\n\r\n";
   
   cd.resize(PACKET_MAX_SIZE,'0');
   cout<<"cd size: " << sizeof(cd)<<endl;
@@ -126,12 +126,12 @@ void Shell::cd_rpc(string dname) {
       if(( bytes_sent=send(cs_sock , cd.c_str() , strlen( cd.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << cd << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -145,7 +145,7 @@ void Shell::home_rpc() {
   
   int bytes_sent(0);
   
-  string home = "home\r\n";
+  string home = "home\\r\\n\r\n";
   
   home.resize(PACKET_MAX_SIZE,'0');
   cout<<"home size: " << sizeof(home)<<endl;
@@ -155,12 +155,12 @@ void Shell::home_rpc() {
       if(( bytes_sent=send(cs_sock , home.c_str() , strlen( home.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << home << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -174,7 +174,7 @@ void Shell::rmdir_rpc(string dname) {
   
   int bytes_sent(0);
   
-  string rmdir = "rmdir " + dname + "\r\n";
+  string rmdir = "rmdir " + dname + "\\r\\n\r\n";
   
   rmdir.resize(PACKET_MAX_SIZE,'0');
   cout<<"rmdir size: " << sizeof(rmdir)<<endl;
@@ -183,12 +183,12 @@ void Shell::rmdir_rpc(string dname) {
       if(( bytes_sent=send(cs_sock , rmdir.c_str() , strlen( rmdir.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << rmdir << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -202,7 +202,7 @@ void Shell::ls_rpc() {
     
   int bytes_sent(0);
   
-  string ls = "ls\r\n";
+  string ls = "ls\\r\\n\r\n";
   
   ls.resize(PACKET_MAX_SIZE,'0');
   cout<<"ls size: " << sizeof(ls)<<endl;
@@ -211,12 +211,12 @@ void Shell::ls_rpc() {
       if(( bytes_sent=send(cs_sock , ls.c_str() , strlen( ls.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << ls << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -230,7 +230,7 @@ void Shell::create_rpc(string fname) {
     
   int bytes_sent(0);
   
-  string create = "create " + fname + "\r\n";
+  string create = "create " + fname + "\\r\\n\r\n";
   
   create.resize(PACKET_MAX_SIZE,'0');
   cout<<"create size: " << sizeof(create)<<endl;
@@ -239,12 +239,12 @@ void Shell::create_rpc(string fname) {
       if(( bytes_sent=send(cs_sock , create.c_str() , strlen( create.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << create << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -253,12 +253,14 @@ void Shell::create_rpc(string fname) {
   
 }
 
+
+/******************************************/
 // Remote procedure call on append
 void Shell::append_rpc(string fname, string data) {
  
   int bytes_sent(0);
   
-  string append = "append " + fname + "\r\n";
+  string append = "append " + fname + " " + data + "\\r\\n\r\n";
   
   append.resize(PACKET_MAX_SIZE,'0');
   cout<<"cd size: " << sizeof(append)<<endl;
@@ -267,12 +269,12 @@ void Shell::append_rpc(string fname, string data) {
       if(( bytes_sent=send(cs_sock , append.c_str() , strlen( append.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << append << endl;
-        exit(EXIT_FAILURE); 
+        return; 
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -286,12 +288,17 @@ void Shell::append_rpc(string fname, string data) {
   
 }
 
+
+/******************************************/
+
+
+
 // Remote procesure call on cat
 void Shell::cat_rpc(string fname) {
   
   int bytes_sent(0);
   
-  string cat = "cat " + fname + "\r\n";
+  string cat = "cat " + fname + "\\r\\n\r\n";
   
   cat.resize(PACKET_MAX_SIZE,'0');
   cout<<"cat size: " << sizeof(cat)<<endl;
@@ -300,12 +307,12 @@ void Shell::cat_rpc(string fname) {
       if(( bytes_sent=send(cs_sock , cat.c_str() , strlen( cat.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << cat << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -316,10 +323,11 @@ void Shell::cat_rpc(string fname) {
 // Remote procedure call on head
 void Shell::head_rpc(string fname, int n) {
   
-  
+   int nbo = htonl(n);
+   string nbos = to_string(nbo);
    int bytes_sent(0);
   
-  string head = "head " + fname + "\r\n";
+  string head = "head " + fname + " " + nbos + "\\r\\n\r\n";
   
   head.resize(PACKET_MAX_SIZE,'0');
   cout<<"head size: " << sizeof(head)<<endl;
@@ -328,12 +336,12 @@ void Shell::head_rpc(string fname, int n) {
       if(( bytes_sent=send(cs_sock , head.c_str() , strlen( head.c_str() ) , 0)) < 0)
       {
         cout << "Send failed : " << head << endl;
-        exit(EXIT_FAILURE);
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -347,7 +355,7 @@ void Shell::head_rpc(string fname, int n) {
 void Shell::rm_rpc(string fname) {
   int bytes_sent(0);
   
-  string rm = "rm " + fname + "\r\n";
+  string rm = "rm " + fname + "\\r\\n\r\n";
   
   rm.resize(PACKET_MAX_SIZE,'0');
   cout<<"rm size: " << sizeof(rm)<<endl;
@@ -355,13 +363,13 @@ void Shell::rm_rpc(string fname) {
 	{
       if(( bytes_sent=send(cs_sock , rm.c_str() , strlen( rm.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << rm << endl;
-        exit(EXIT_FAILURE);
+        cerr << "Send failed : " << rm << endl;
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
@@ -373,7 +381,7 @@ void Shell::rm_rpc(string fname) {
 void Shell::stat_rpc(string fname) {
     int bytes_sent(0);
   
-  string stat = "stat " + fname + "\r\n";
+  string stat = "stat " + fname + "\\r\\n\r\n";
   
   stat.resize(PACKET_MAX_SIZE,'0');
   cout<<"stat size: " << sizeof(stat)<<endl;
@@ -381,13 +389,13 @@ void Shell::stat_rpc(string fname) {
 	{
       if(( bytes_sent=send(cs_sock , stat.c_str() , strlen( stat.c_str() ) , 0)) < 0)
       {
-        cout << "Send failed : " << stat << endl;
-        exit(EXIT_FAILURE);
+        cerr << "Send failed : " << stat << endl;
+        return;
       }
 
   }
     else
-      exit(EXIT_FAILURE);
+      return;
  
  
   cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;

@@ -20,6 +20,8 @@ void parseAndCall(string s);
 void getCmd();
 
 FileSys fs;
+TCP_SERVER server;
+
 int main(int argc, char* argv[]) {
 	if (argc < 2) {
 		cerr << "Usage: ./nfsserver port#\n";
@@ -27,7 +29,7 @@ int main(int argc, char* argv[]) {
     }
     
     int port = atoi(argv[1]);
-    TCP_SERVER server;
+
     
     if(server.knit(port)==-1)
       exit(EXIT_FAILURE); 
@@ -42,12 +44,11 @@ int main(int argc, char* argv[]) {
     
 
     server.await();
-    for(int i(0); i<5;i++){
-      server.message.erase();
-      int x = server.sockread(PACKET_MAX_SIZE);
-      cout << server.message<<endl;
-    }
-    
+	for(int i(0); i<5;i++){
+		cerr<<"Getting command\n\n";
+	
+	getCmd();
+	}
     //close the listening socket
     
     server.unbind();
@@ -61,30 +62,55 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+
+
 void getCmd(){
     /*Wild and crazy search function*/
+
+	string asubstr;
+	string s1;
+	string s2 = "\\r\\n";
     string msg;
+	size_t found;
     int bytes_read(0);
-    bool eom = false;
-    size_t pos = npos;
-    while(!eom){
-        if(bytes_read > MAX_INC_READ_SIZE){
+
+    while( (found = msg.find(s2) )== std::string::npos){
+		
+		
+		
+		/**keep this stuff*/
+		cerr<<"in getCmd...\n\n";
+        if(bytes_read > 32){
             cerr<<"Incoming command exceeds max allowable size\n";
             break;
         }
+		
         size_t readSize = server.sockread(PACKET_MAX_SIZE);
+		
+		cerr<<"readsize in getCmd = " << readSize<<"\n";
+		
+		if(bytes_read==0)
+			bytes_read = readSize;
+		else
+			bytes_read+= readSize;
+		
+		cerr<<"Bytes read in getCmd = "<<bytes_read<<"\n";
+		
         msg = msg + server.message;
-        if(bytes_read>3)
-            pos = msg.find("\r\n", bytes_read-4);
-        bytes_read+= readSize;
-        if(pos != npos){
-            eom = true;
-            size_t offset = bytes_read - (bytes_read-(pos+3));
-            msg.resize(offset);
-        }
-    }
-    parseAndCall(msg);    
+		
+		cerr<<"found = " << found << "\n";
+	}
+		
+	s1 = msg.substr(0, found);
+		
+	cout<<"\n"<<s1<<endl;
+ 
+	
+    parseAndCall(s1);  
+	
 }
+
+
 
 void parseAndCall(string message)
 {
@@ -155,5 +181,5 @@ void parseAndCall(string message)
 		fs.stat(command.c_str());
 	}
 	else 
-		cout << "ERROR EXITING HELP";	
+		cout << "ERROR EXITING HELP\n";	
 }

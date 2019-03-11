@@ -12,6 +12,7 @@
 //#include <pthread.h> to be implemented later
 //#define ENABLE_MULTITHREADING 0
 
+
 #pragma once
 
 
@@ -36,7 +37,7 @@ class TCP_SERVER
      ~TCP_SERVER()=default;
      TCP_SERVER(const TCP_SERVER& other) = delete;
      TCP_SERVER(TCP_SERVER&& temp) = delete;
-	   TCP_SERVER& operator=(const TCP_SERVER& other) = delete;
+	 TCP_SERVER& operator=(const TCP_SERVER& other) = delete;
      TCP_SERVER& operator=(TCP_SERVER&& temp) = delete;
 
  
@@ -67,7 +68,7 @@ class TCP_SERVER
     
     /**
      *@brief writes msg to client
-     *Code Courtesy of Dr. Yingwu Zhu, Seattle University
+     *Code adapted, Courtesy of Dr. Yingwu Zhu, Seattle University
      */
     int sockwrite(void *p, int size);
     

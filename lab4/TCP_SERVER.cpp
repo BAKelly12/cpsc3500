@@ -31,6 +31,7 @@ TCP_SERVER::~TCP_SERVER()
 
 int TCP_SERVER::knit(int p)
 {  
+    //setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
     /*create socket*/
     if((sock = socket(AF_INET, SOCK_STREAM, 0))<0){
       cerr<<"Socket failed to create\n\n";
@@ -58,18 +59,19 @@ int TCP_SERVER::knit(int p)
 int TCP_SERVER::await()
 {
 
-		clientAddressLength  = sizeof(clientAddress);
-		newSock = accept(sock,(struct sockaddr*)&clientAddress,&clientAddressLength);
+	clientAddressLength  = sizeof(clientAddress);
+	newSock = accept(sock,(struct sockaddr*)&clientAddress,&clientAddressLength);
     if(newSock<0)
       return -1;
     /*get a string copy of client address for easy display*/
-		clientName = inet_ntoa(clientAddress.sin_addr);
+	clientName = inet_ntoa(clientAddress.sin_addr);
     cout<<"Server:  Connected to client: " << clientName << "..."<<endl;
+ 
 
     /*new thread creation would be implemented here*/
-
   return 0;
 }
+
 
 
 int TCP_SERVER::sockread(size_t len)
@@ -88,13 +90,16 @@ int TCP_SERVER::sockread(size_t len)
         count -= bytes_received;  
         /*increment buffer pointer*/
         bufptr += bytes_received;  
-        /*tabulate total receive size*/
-        len+=bytes_received;
+        ///*tabulate total receive size*/
+       // len+=bytes_received;
     }
     message = buf;
-    cout << endl<<"Bytes received: "<<bytes_received<<"\n";
+	cerr<<message;
+    cerr<< endl<<"Bytes received: "<<bytes_received<<"\n";
     return len;
 }
+
+
 
 
 int TCP_SERVER::sockwrite(void* p, int size)
@@ -123,3 +128,34 @@ void TCP_SERVER::wipe()
 { 
   clientName="";
 }
+
+
+
+/*save for later
+
+void getCmd(){
+	/*Wild and crazy search function
+	string msg;
+	int bytes_read(0);
+	bool eom = false;
+	size_t pos = npos;
+	while(!eom){
+		if(bytes_read > MAX_INC_READ_SIZE){
+			cerr<<"Incoming command exceeds max allowable size\n";
+			break;
+		}
+		size_t readSize = server.sockread(PACKET_MAX_SIZE);
+		msg = msg + server.message;
+		if(bytes_read>3)
+			pos = msg.find("\r\n", bytes_read-4);
+		bytes_read+= readSize;
+		if(pos != npos){
+			eom = true;
+			size_t offset = bytes_read - (bytes_read-(pos+3));
+			msg.resize(offset);
+		}
+	}
+	parseAndCall(msg);	
+}
+
+*/

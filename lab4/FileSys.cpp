@@ -1,15 +1,16 @@
 // CPSC 3500: File System
 // Implements the file system commands that are available to the shell.
-
+#include <string>
 #include <cstring>
 #include <iostream>
 #include <stdio.h>
 #include <unistd.h>
-using namespace std;
+
 
 #include "FileSys.h"
 #include "BasicFileSys.h"
 #include "Blocks.h"
+using namespace std;
 
 // mounts the file system
 void FileSys::mount(int sock) {
@@ -530,8 +531,8 @@ void FileSys::stat(const char *name)
 			{
 				//THE FOLLOWING IS INODE INFORMATION
 				// Inode block and bytes in file.
-				str1 = "\nInode block: " + to_string(currentDir.dir_entries[i].block_num);
-				str2 = "\nBytes in file: " + to_string(tempBlock.size);
+				str1 = "\nInode block: " + std::to_string(currentDir.dir_entries[i].block_num);
+				str2 = "\nBytes in file: " + std::to_string(tempBlock.size);
 			
 				//Number of blocks
 				int tempNumBlocks;

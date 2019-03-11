@@ -325,7 +325,7 @@ void FileSys::append(const char *name, const char *data)
 				//Update each with the new information
 				bfs.write_block(currentDir.dir_entries[i].block_num, (void*) &tempInode);
 			}
-			cout << "success" << endl;
+			writeSock("200 OK\r\nLength:0\r\n\r\n");
 			return;
 		}
 	}

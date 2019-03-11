@@ -3,6 +3,9 @@
 
 #ifndef FILESYS_H
 #define FILESYS_H
+#include <string>
+#include <string.h>
+using namespace std;
 
 #include "BasicFileSys.h"
 
@@ -53,6 +56,26 @@ class FileSys {
     short curr_dir;	// current directory
 	short home_dir = 1;
     int fs_sock;  // file server socket
+	string toWrite;
+	
+void writeSock(string msg)
+{    
+	int bytes_sent(0);
+	size_t size = msg.length();
+	int x;
+	void* p = (void*)msg.c_str();
+  
+	while(bytes_sent < size){
+		if((x = write(fs_sock, p , size - bytes_sent))<0){
+			cerr<<"Error writing to socket..\n";
+			close(fs_sock);
+		return;
+		}
+		p+=x;
+		bytes_sent +=x;
+	}
+	return;
+}
 
     // Additional private variables and Helper functions - if desired
 

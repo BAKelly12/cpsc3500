@@ -182,4 +182,5 @@ void parseAndCall(string message)
 	}
 	else 
 		cout << "ERROR EXITING HELP\n";	
+	
 }

@@ -60,6 +60,7 @@ class FileSys {
 	
 void writeSock(string msg)
 {    
+	cerr << "in writesock... \n\n";
 	int bytes_sent(0);
 	size_t size = msg.length();
 	int x;

@@ -514,6 +514,7 @@ void FileSys::rm(const char *name)
 // display stats about file or directory
 void FileSys::stat(const char *name)
 {
+	cerr<<"In stat...\n\n";
 	string strBegin = "200 OK\r\n Length:";
 	string strInt, strComplete;
 	string strEnd, str1, str2, str3, str4, nameStr;
@@ -531,6 +532,7 @@ void FileSys::stat(const char *name)
 			{
 				//THE FOLLOWING IS INODE INFORMATION
 				// Inode block and bytes in file.
+				cerr<<"In stat1...\n\n";
 				str1 = "\nInode block: " + std::to_string(currentDir.dir_entries[i].block_num);
 				str2 = "\nBytes in file: " + std::to_string(tempBlock.size);
 			
@@ -560,11 +562,14 @@ void FileSys::stat(const char *name)
 			else 
 			{
 				//THE FOLLOWING IS DIRECTORY INFORMATION
+				cerr<<"In stat2...\n\n";
 				strcpy (nameOut, currentDir.dir_entries[i].name);
+				cerr<<"In stat3...\n\n";
 				nameStr = nameOut;
 				str1 = "Directory name: " + nameStr + "/\n";
 				str2 = "Directory block: " + to_string(currentDir.dir_entries[i].block_num) + "\n";
 				strEnd = str1 + str2;
+				cerr<<"In stat3...\n\n";
 				strComplete = strBegin + to_string(strEnd.length()) + "\r\n \r\n" + strEnd;
 				writeSock(strComplete);
 				return;

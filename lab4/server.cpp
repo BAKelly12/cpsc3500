@@ -116,7 +116,7 @@ void parseAndCall(string message)
 {
 	int sizeOfString = message.length();
 	string command;
-	const int ending = 4;
+	const int ending = 0;
 	int numSpaces, counter; //For head and append parsing
 	if (message[0] == 'm') {
 		command = message.substr (6, sizeOfString - 6 - ending);
@@ -150,8 +150,8 @@ void parseAndCall(string message)
 				numSpaces++;
 			counter++;
 		}
-		command = message.substr (7, counter - 7);
-		command2 = message.substr(counter + 1, sizeOfString - (counter + 1) - ending);
+		command = message.substr (7, counter - 8);
+		command2 = message.substr(counter, sizeOfString - (counter) - ending);
 		fs.append(command.c_str(), command2.c_str());
 	}
 	else if (message[0] == 'c' && message[1] == 'a') {
@@ -168,11 +168,14 @@ void parseAndCall(string message)
 				numSpaces++;
 			counter++;
 		}
-		command = message.substr (5, counter - 5);
-		command2 = message.substr(counter + 1, sizeOfString - (counter + 1) - ending);
-		fs.head(command.c_str(), stoul (command2.c_str(), nullptr, 0));
+		command = message.substr (5, counter - 6);
+		command2 = message.substr(counter, sizeOfString - (counter) - ending);
+		cout << stoul(command2.c_str(), nullptr, 0);
+		cout << "above should be legible..";
+		cin.get();
+		fs.head(command.c_str(), stoul(command2.c_str(), nullptr, 0));
 	}
-	else if (message[0] == 'r' && message[1] == 'm' && message[3] == ' ') {
+	else if (message[0] == 'r' && message[1] == 'm') {
 		command = message.substr (3, sizeOfString - 3 - ending);
 		fs.rm(command.c_str());
 	}

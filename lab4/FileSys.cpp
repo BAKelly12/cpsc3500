@@ -35,21 +35,21 @@ void FileSys::mkdir(const char *name)
 	{
 		if (strcmp (currentDir.dir_entries[i].name, name) == 0)
 		{
-			cout << "502 File exists\r\n Length:0\r\n \r\n" << endl;
+			cout << "502 File exists\r\nLength:0\r\n\r\n" << endl;
 			return;
 		}
 	}
 	
 	if (strlen(name) > MAX_FNAME_SIZE)
 	{
-		cout << "504 File name is too long\r\n Length:0\r\n \r\n" << endl;
+		cout << "504 File name is too long\r\nLength:0\r\n\r\n" << endl;
 		return;	
 	}
 	
 	//Dont go beyond the max num of entries
 	if (currentDir.num_entries + 1 > MAX_DIR_ENTRIES)
 	{
-		cout << "506 Directory is full\r\n Length:0\r\n \r\n" << endl;
+		cout << "506 Directory is full\r\nLength:0\r\n\r\n" << endl;
 		return;		
 	}
 	
@@ -58,7 +58,7 @@ void FileSys::mkdir(const char *name)
 	short dirEntry = bfs.get_free_block();
 	if (dirEntry == 0)
 	{
-		cout << "505 Disk is full\r\n Length:0\r\n \r\n" << endl;
+		cout << "505 Disk is full\r\nLength:0\r\n\r\n" << endl;
 		return;		
 	}
 	
@@ -76,7 +76,7 @@ void FileSys::mkdir(const char *name)
 	//Write updates
 	bfs.write_block(curr_dir, (void*) &currentDir);
 	bfs.write_block(dirEntry, (void*) &dir_block);
-	writeSock("200 OK\r\n Length:0\r\n \r\n");
+	writeSock("200 OK\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -95,16 +95,16 @@ void FileSys::cd(const char *name)
 			//Ensure what we are switching to is not a inode
 			if (currentDir.magic == 0xFFFFFFFE)
 			{
-				cout << "500 File is not a directory\r\n Length:0\r\n \r\n" << endl;
+				cout << "500 File is not a directory\r\nLength:0\r\n\r\n" << endl;
 				return;
 			}
 			
 			curr_dir = currentDir.dir_entries[i].block_num;
-			writeSock("200 OK\r\n Length:0\r\n \r\n");
+			writeSock("200 OK\r\nLength:0\r\n\r\n");
 			return;
 		}
 	}
-	cout << "503 File does not exist\r\n Length:0\r\n \r\n" << endl;
+	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
 	return;
 }
 
@@ -112,7 +112,7 @@ void FileSys::cd(const char *name)
 void FileSys::home() 
 {
 	curr_dir = 1; //1 is the home directory
-	writeSock("200 OK\r\n Length:0\r\n \r\n");
+	writeSock("200 OK\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -134,7 +134,7 @@ void FileSys::rmdir(const char *name)
 			//Ensure it is a directory
 			if (dirBlockTemp.magic == 0xFFFFFFFE)
 			{
-				cout << "500 File is not a directory\r\n Length:0\r\n \r\n" << endl;
+				cout << "500 File is not a directory\r\nLength:0\r\n\r\n" << endl;
 				return;
 			}
 			
@@ -146,15 +146,15 @@ void FileSys::rmdir(const char *name)
 				
 				currentDir.num_entries--;
 				bfs.write_block(curr_dir, (void*) &currentDir);
-				writeSock("200 OK\r\n Length:0\r\n \r\n");
+				writeSock("200 OK\r\nLength:0\r\n\r\n");
 				return;
 			} else {
-				cout << "Directory is not empty\r\n Length:0\r\n \r\n" << endl;
+				cout << "Directory is not empty\r\nLength:0\r\n\r\n" << endl;
 				return;
 			}
 		}
 	}
-	cout << "503 File does not exist\r\n Length:0\r\n \r\n" << endl;
+	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
 	return;
 }
 
@@ -163,7 +163,7 @@ void FileSys::ls()
 {
 	char printS[] = "";
 	string s1;
-	string tempStr = "200 OK\r\n Length:";
+	string tempStr = "200 OK\r\nLength:";
 	string strInt, strComplete;
 	string strEnding = "";
 	char* str1;
@@ -173,7 +173,7 @@ void FileSys::ls()
 	
 	//Check to see if anything exists in current directory
 	if (currentDir.num_entries == 0) {
-		writeSock("200 OK\r\n Length:0\r\n \r\n");
+		writeSock("200 OK\r\nLength:0\r\n\r\n");
 		return;
 	}
 	//Go through each entry, output each entry name.
@@ -184,16 +184,14 @@ void FileSys::ls()
 			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempBlock);
 			if (tempBlock.magic == 0xFFFFFFFE) //Check to see if it is an inode
 			{
-				strcpy(str1, currentDir.dir_entries[i].name);
-				s1 = str1;
+				string s1 = currentDir.dir_entries[i].name;
 				strEnding = strEnding + s1 + "\n";
 			} else {
-				strcpy(str1, currentDir.dir_entries[i].name);
-				s1 = str1;
+				string s1 = currentDir.dir_entries[i].name;
 				strEnding = strEnding + s1 + "/\n";
 			}
 		}
-		strComplete = tempStr + to_string(strInt.length()) + "\r\n \r\n" + strEnding;
+		strComplete = tempStr + to_string(strInt.length()) + "\r\n\r\n" + strEnding;
 		writeSock(strComplete);
 		return;
 	}
@@ -209,27 +207,27 @@ void FileSys::create(const char *name)
 	{
 		if (strcmp (currentDir.dir_entries[i].name, name) == 0)
 		{
-			cout << "502 File exists\r\n Length:0\r\n \r\n" << endl;
+			cout << "502 File exists\r\nLength:0\r\n\r\n" << endl;
 			return;
 		}
 	}
 	
 	if (strlen(name) > MAX_FNAME_SIZE)
 	{
-		cout << "504 File name is too long\r\n Length:0\r\n \r\n" << endl;
+		cout << "504 File name is too long\r\nLength:0\r\n\r\n" << endl;
 		return;	
 	}
 	
 	if (currentDir.num_entries + 1 > MAX_DIR_ENTRIES)
 	{
-		cout << "506 Directory is full\r\n Length:0\r\n \r\n" << endl;
+		cout << "506 Directory is full\r\nLength:0\r\n\r\n" << endl;
 		return;		
 	}
 
 	short inodeEntry = bfs.get_free_block(); //inode
 	if (inodeEntry == 0)
 	{
-		cout << "505 Disk is full\r\n Length:0\r\n \r\n" << endl;
+		cout << "505 Disk is full\r\nLength:0\r\n\r\n" << endl;
 		return;		
 	}
 	
@@ -245,7 +243,7 @@ void FileSys::create(const char *name)
 	currentDir.num_entries++;
 	
 	bfs.write_block(curr_dir, (void*) &currentDir);
-	writeSock("200 OK\r\n Length:0\r\n \r\n");
+	writeSock("200 OK\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -269,7 +267,7 @@ void FileSys::append(const char *name, const char *data)
 			//Check if it is a dir
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\n Length:0\r\n \r\n" << endl;
+				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
 				return;
 			}
 			
@@ -291,7 +289,7 @@ void FileSys::append(const char *name, const char *data)
 				
 				if (tempInode.size > MAX_FILE_SIZE)
 				{
-					cout << "508 Append exceeds maximum file size\r\n Length:0\r\n \r\n" << endl;
+					cout << "508 Append exceeds maximum file size\r\nLength:0\r\n\r\n" << endl;
 					return;
 				}
 					
@@ -302,7 +300,7 @@ void FileSys::append(const char *name, const char *data)
 					short newDataBlock = bfs.get_free_block();
 					if (newDataBlock == 0)
 					{
-						cout << "505 Disk is full\r\n Length:0\r\n \r\n" << endl;
+						cout << "505 Disk is full\r\nLength:0\r\n\r\n" << endl;
 						return;		
 					}
 					struct datablock_t newData;
@@ -331,14 +329,14 @@ void FileSys::append(const char *name, const char *data)
 			return;
 		}
 	}
-	cout << "503 File does not exist\r\n Length:0\r\n \r\n" << endl;
+	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
 	return;
 }
 
 // display the contents of a data file
 void FileSys::cat(const char *name)
 {
-	string tempStr = "200 OK\r\n Length:";
+	string tempStr = "200 OK\r\nLength:";
 	string strInt, strComplete;
 	string strEnding = "";
 	//load current directory
@@ -359,7 +357,7 @@ void FileSys::cat(const char *name)
 			//Ensure it is a file
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\n Length:0\r\n \r\n" << endl;
+				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
 				return;
 			}
 			
@@ -380,7 +378,7 @@ void FileSys::cat(const char *name)
 					if (counter == tempInode.size + 1)
 					{
 						strInt = to_string(counter);
-						strComplete = tempStr + strInt + "\r\n \r\n" + strEnding;
+						strComplete = tempStr + strInt + "\r\n\r\n" + strEnding;
 						writeSock(strComplete);
 						return;
 					}
@@ -391,14 +389,14 @@ void FileSys::cat(const char *name)
 			
 		}
 	}
-	cout << "503 File does not exist\r\n Length:0\r\n \r\n" << endl;
+	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
 	return;
 }
 
 // display the first N bytes of the file
 void FileSys::head(const char *name, unsigned int n)
 {
-	string tempStr = "200 OK\r\n Length:";
+	string tempStr = "200 OK\r\nLength:";
 	string strInt, strComplete;
 	string strEnding = "";
 	//load current directory
@@ -420,7 +418,7 @@ void FileSys::head(const char *name, unsigned int n)
 			//Ensure it is a file
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\n Length:0\r\n \r\n" << endl;
+				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
 				return;
 			}
 				
@@ -443,7 +441,10 @@ void FileSys::head(const char *name, unsigned int n)
 					if (counter == n || counter > tempInode.size)
 					{
 						strInt = to_string(counter);
-						strComplete = tempStr + strInt + "\r\n \r\n" + strEnding;
+						strComplete = tempStr + strInt + "\r\n\r\n" + strEnding;
+						cout << endl << strComplete << endl;
+						cout << "above is the stuff" << endl;
+						cin.get();
 						writeSock(strComplete);
 						return;
 					}
@@ -453,7 +454,7 @@ void FileSys::head(const char *name, unsigned int n)
 			}
 		}
 	}
-	cout << "503 File does not exist\r\n Length:0\r\n \r\n" << endl;
+	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
 	return;
 }
 
@@ -478,7 +479,7 @@ void FileSys::rm(const char *name)
 			//Ensure it is an inode and not a directory
 			if (inodeBlockTemp.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\n Length:0\r\n \r\n" << endl;
+				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
 				return;
 			}
 			
@@ -503,28 +504,28 @@ void FileSys::rm(const char *name)
 			bfs.reclaim_block(currentDir.dir_entries[i].block_num);
 			
 			bfs.write_block(curr_dir, (void*) &currentDir);
-			writeSock("200 OK\r\n Length:0\r\n \r\n");
+			writeSock("200 OK\r\nLength:0\r\n\r\n");
 			return;
 		}
 	}
-	cout << "503 File does not exist\r\n Length:0\r\n \r\n" << endl;
+	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
 	return;
 }
 
 // display stats about file or directory
 void FileSys::stat(const char *name)
 {
-	cerr<<"In stat...\n\n";
-	string strBegin = "200 OK\r\n Length:";
+
+	string strBegin = "200 OK\r\nLength:";
 	string strInt, strComplete;
 	string strEnd, str1, str2, str3, str4, nameStr;
-	char* nameOut;
 	struct dirblock_t currentDir;
 	bfs.read_block(curr_dir, (void*) &currentDir);
 	for (unsigned int i = 0; i < currentDir.num_entries; i++)
 	{	
 		if (strcmp (currentDir.dir_entries[i].name, name) == 0)
 		{
+			
 			//load inode/directory in
 			struct inode_t tempBlock;
 			bfs.read_block(currentDir.dir_entries[i].block_num, (void*) &tempBlock);
@@ -532,7 +533,7 @@ void FileSys::stat(const char *name)
 			{
 				//THE FOLLOWING IS INODE INFORMATION
 				// Inode block and bytes in file.
-				cerr<<"In stat1...\n\n";
+
 				str1 = "\nInode block: " + std::to_string(currentDir.dir_entries[i].block_num);
 				str2 = "\nBytes in file: " + std::to_string(tempBlock.size);
 			
@@ -555,29 +556,26 @@ void FileSys::stat(const char *name)
 				strEnd = str1 + str2 + str3 + str4;
 				//Ending part
 				
-				strComplete = strBegin + to_string(strEnd.length()) + "\r\n \r\n" + strEnd;
+				strComplete = strBegin + to_string(strEnd.length()) + "\r\n\r\n" + strEnd;
 				writeSock(strComplete);
 				return;
 			}
 			else 
 			{
 				//THE FOLLOWING IS DIRECTORY INFORMATION
-				cerr<<"In stat2...\n\n";
-				strcpy (nameOut, currentDir.dir_entries[i].name);
-				cerr<<"In stat3...\n\n";
-				nameStr = nameOut;
-				str1 = "Directory name: " + nameStr + "/\n";
-				str2 = "Directory block: " + to_string(currentDir.dir_entries[i].block_num) + "\n";
+				string str3 = currentDir.dir_entries[i].name;
+				string str1 = "Directory name: " + str3 + "/\n";
+				string str4 = to_string(currentDir.dir_entries[i].block_num);
+				str2 = "Directory block: " + str4 + "\n";
 				strEnd = str1 + str2;
-				cerr<<"In stat3...\n\n";
-				strComplete = strBegin + to_string(strEnd.length()) + "\r\n \r\n" + strEnd;
+				strComplete = strBegin + to_string(strEnd.length()) + "\r\n\r\n" + strEnd;
 				writeSock(strComplete);
 				return;
 			}
 
 		}
 	}
-	cout << "503 File does not exist\r\n Length:0\r\n \r\n" << endl;
+	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
 	return;
 }
 

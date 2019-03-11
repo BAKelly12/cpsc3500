@@ -10,12 +10,14 @@
 #include <unistd.h> 
 #include "FileSys.h"
 #include "TCP_SERVER.h"
+#define MAX_INC_READ_SIZE 4096
 #define PACKET_MAX_SIZE 32
 
 using namespace std;
 
 void cleanExit(){exit(0);}
 void parseAndCall(string s);
+void getCmd();
 
 FileSys fs;
 int main(int argc, char* argv[]) {
@@ -57,6 +59,31 @@ int main(int argc, char* argv[]) {
     /*Close the socket*/
 
     return 0;
+}
+
+void getCmd(){
+    /*Wild and crazy search function*/
+    string msg;
+    int bytes_read(0);
+    bool eom = false;
+    size_t pos = npos;
+    while(!eom){
+        if(bytes_read > MAX_INC_READ_SIZE){
+            cerr<<"Incoming command exceeds max allowable size\n";
+            break;
+        }
+        size_t readSize = server.sockread(PACKET_MAX_SIZE);
+        msg = msg + server.message;
+        if(bytes_read>3)
+            pos = msg.find("\r\n", bytes_read-4);
+        bytes_read+= readSize;
+        if(pos != npos){
+            eom = true;
+            size_t offset = bytes_read - (bytes_read-(pos+3));
+            msg.resize(offset);
+        }
+    }
+    parseAndCall(msg);    
 }
 
 void parseAndCall(string message)

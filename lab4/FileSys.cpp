@@ -35,21 +35,21 @@ void FileSys::mkdir(const char *name)
 	{
 		if (strcmp (currentDir.dir_entries[i].name, name) == 0)
 		{
-			cout << "502 File exists\r\nLength:0\r\n\r\n" << endl;
+			writeSock("502 File exists\r\nLength:0\r\n\r\n");
 			return;
 		}
 	}
 	
 	if (strlen(name) > MAX_FNAME_SIZE)
 	{
-		cout << "504 File name is too long\r\nLength:0\r\n\r\n" << endl;
+		writeSock("504 File name is too long\r\nLength:0\r\n\r\n");
 		return;	
 	}
 	
 	//Dont go beyond the max num of entries
 	if (currentDir.num_entries + 1 > MAX_DIR_ENTRIES)
 	{
-		cout << "506 Directory is full\r\nLength:0\r\n\r\n" << endl;
+		writeSock("506 Directory is full\r\nLength:0\r\n\r\n");
 		return;		
 	}
 	
@@ -58,7 +58,7 @@ void FileSys::mkdir(const char *name)
 	short dirEntry = bfs.get_free_block();
 	if (dirEntry == 0)
 	{
-		cout << "505 Disk is full\r\nLength:0\r\n\r\n" << endl;
+		writeSock("505 Disk is full\r\nLength:0\r\n\r\n");
 		return;		
 	}
 	
@@ -95,7 +95,7 @@ void FileSys::cd(const char *name)
 			//Ensure what we are switching to is not a inode
 			if (currentDir.magic == 0xFFFFFFFE)
 			{
-				cout << "500 File is not a directory\r\nLength:0\r\n\r\n" << endl;
+				writeSock("500 File is not a directory\r\nLength:0\r\n\r\n");
 				return;
 			}
 			
@@ -104,7 +104,7 @@ void FileSys::cd(const char *name)
 			return;
 		}
 	}
-	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
+	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -134,7 +134,7 @@ void FileSys::rmdir(const char *name)
 			//Ensure it is a directory
 			if (dirBlockTemp.magic == 0xFFFFFFFE)
 			{
-				cout << "500 File is not a directory\r\nLength:0\r\n\r\n" << endl;
+				writeSock("500 File is not a directory\r\nLength:0\r\n\r\n");
 				return;
 			}
 			
@@ -149,12 +149,12 @@ void FileSys::rmdir(const char *name)
 				writeSock("200 OK\r\nLength:0\r\n\r\n");
 				return;
 			} else {
-				cout << "Directory is not empty\r\nLength:0\r\n\r\n" << endl;
+				writeSock("Directory is not empty\r\nLength:0\r\n\r\n");
 				return;
 			}
 		}
 	}
-	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
+	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -207,27 +207,27 @@ void FileSys::create(const char *name)
 	{
 		if (strcmp (currentDir.dir_entries[i].name, name) == 0)
 		{
-			cout << "502 File exists\r\nLength:0\r\n\r\n" << endl;
+			writeSock("502 File exists\r\nLength:0\r\n\r\n");
 			return;
 		}
 	}
 	
 	if (strlen(name) > MAX_FNAME_SIZE)
 	{
-		cout << "504 File name is too long\r\nLength:0\r\n\r\n" << endl;
+		writeSock("504 File name is too long\r\nLength:0\r\n\r\n");
 		return;	
 	}
 	
 	if (currentDir.num_entries + 1 > MAX_DIR_ENTRIES)
 	{
-		cout << "506 Directory is full\r\nLength:0\r\n\r\n" << endl;
+		writeSock("506 Directory is full\r\nLength:0\r\n\r\n");
 		return;		
 	}
 
 	short inodeEntry = bfs.get_free_block(); //inode
 	if (inodeEntry == 0)
 	{
-		cout << "505 Disk is full\r\nLength:0\r\n\r\n" << endl;
+		writeSock("505 Disk is full\r\nLength:0\r\n\r\n");
 		return;		
 	}
 	
@@ -267,7 +267,7 @@ void FileSys::append(const char *name, const char *data)
 			//Check if it is a dir
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
+				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
 				return;
 			}
 			
@@ -289,7 +289,7 @@ void FileSys::append(const char *name, const char *data)
 				
 				if (tempInode.size > MAX_FILE_SIZE)
 				{
-					cout << "508 Append exceeds maximum file size\r\nLength:0\r\n\r\n" << endl;
+					writeSock("508 Append exceeds maximum file size\r\nLength:0\r\n\r\n");
 					return;
 				}
 					
@@ -300,7 +300,7 @@ void FileSys::append(const char *name, const char *data)
 					short newDataBlock = bfs.get_free_block();
 					if (newDataBlock == 0)
 					{
-						cout << "505 Disk is full\r\nLength:0\r\n\r\n" << endl;
+						writeSock("505 Disk is full\r\nLength:0\r\n\r\n");
 						return;		
 					}
 					struct datablock_t newData;
@@ -329,7 +329,7 @@ void FileSys::append(const char *name, const char *data)
 			return;
 		}
 	}
-	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
+	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -357,7 +357,7 @@ void FileSys::cat(const char *name)
 			//Ensure it is a file
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
+				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
 				return;
 			}
 			
@@ -389,7 +389,7 @@ void FileSys::cat(const char *name)
 			
 		}
 	}
-	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
+	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -418,7 +418,7 @@ void FileSys::head(const char *name, unsigned int n)
 			//Ensure it is a file
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
+				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
 				return;
 			}
 				
@@ -442,9 +442,6 @@ void FileSys::head(const char *name, unsigned int n)
 					{
 						strInt = to_string(counter);
 						strComplete = tempStr + strInt + "\r\n\r\n" + strEnding;
-						cout << endl << strComplete << endl;
-						cout << "above is the stuff" << endl;
-						cin.get();
 						writeSock(strComplete);
 						return;
 					}
@@ -454,7 +451,7 @@ void FileSys::head(const char *name, unsigned int n)
 			}
 		}
 	}
-	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
+	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -479,7 +476,7 @@ void FileSys::rm(const char *name)
 			//Ensure it is an inode and not a directory
 			if (inodeBlockTemp.magic == 0xFFFFFFFF)
 			{
-				cout << "501 File is a directory\r\nLength:0\r\n\r\n" << endl;
+				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
 				return;
 			}
 			
@@ -508,7 +505,7 @@ void FileSys::rm(const char *name)
 			return;
 		}
 	}
-	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
+	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
 	return;
 }
 
@@ -575,7 +572,7 @@ void FileSys::stat(const char *name)
 
 		}
 	}
-	cout << "503 File does not exist\r\nLength:0\r\n\r\n" << endl;
+	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
 	return;
 }
 

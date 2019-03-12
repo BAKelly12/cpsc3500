@@ -5,12 +5,16 @@
 #include <iostream>
 #include <stdio.h>
 #include <unistd.h>
-
-
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include "FileSys.h"
 #include "BasicFileSys.h"
 #include "Blocks.h"
+#include <netdb.h>
+
 using namespace std;
+#define PACKET_MAX_SIZE 32
+#include <queue>//for a cheesy way to send packets
 
 // mounts the file system
 void FileSys::mount(int sock) {
@@ -35,21 +39,21 @@ void FileSys::mkdir(const char *name)
 	{
 		if (strcmp (currentDir.dir_entries[i].name, name) == 0)
 		{
-			writeSock("502 File exists\r\nLength:0\r\n\r\n");
+			sendMsg(to_string(500) + "File exists\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 			return;
 		}
 	}
 	
 	if (strlen(name) > MAX_FNAME_SIZE)
 	{
-		writeSock("504 File name is too long\r\nLength:0\r\n\r\n");
+		sendMsg(to_string(500) + "File name is too long\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 		return;	
 	}
 	
 	//Dont go beyond the max num of entries
 	if (currentDir.num_entries + 1 > MAX_DIR_ENTRIES)
 	{
-		writeSock("506 Directory is full\r\nLength:0\r\n\r\n");
+		sendMsg(to_string(506)+"Directory is full\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 		return;		
 	}
 	
@@ -58,7 +62,7 @@ void FileSys::mkdir(const char *name)
 	short dirEntry = bfs.get_free_block();
 	if (dirEntry == 0)
 	{
-		writeSock("505 Disk is full\r\nLength:0\r\n\r\n");
+		sendMsg(to_string(500) + "Disk is full\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 		return;		
 	}
 	
@@ -76,7 +80,7 @@ void FileSys::mkdir(const char *name)
 	//Write updates
 	bfs.write_block(curr_dir, (void*) &currentDir);
 	bfs.write_block(dirEntry, (void*) &dir_block);
-	writeSock("200 OK\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
@@ -95,16 +99,16 @@ void FileSys::cd(const char *name)
 			//Ensure what we are switching to is not a inode
 			if (currentDir.magic == 0xFFFFFFFE)
 			{
-				writeSock("500 File is not a directory\r\nLength:0\r\n\r\n");
+				sendMsg(to_string(500) + "File is not a directory\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			}
 			
 			curr_dir = currentDir.dir_entries[i].block_num;
-			writeSock("200 OK\r\nLength:0\r\n\r\n");
+			sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 			return;
 		}
 	}
-	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(500) + "File does not exist\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
@@ -112,7 +116,7 @@ void FileSys::cd(const char *name)
 void FileSys::home() 
 {
 	curr_dir = 1; //1 is the home directory
-	writeSock("200 OK\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
@@ -134,7 +138,7 @@ void FileSys::rmdir(const char *name)
 			//Ensure it is a directory
 			if (dirBlockTemp.magic == 0xFFFFFFFE)
 			{
-				writeSock("500 File is not a directory\r\nLength:0\r\n\r\n");
+				sendMsg(to_string(500) + "File is not a directory\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			}
 			
@@ -146,15 +150,15 @@ void FileSys::rmdir(const char *name)
 				
 				currentDir.num_entries--;
 				bfs.write_block(curr_dir, (void*) &currentDir);
-				writeSock("200 OK\r\nLength:0\r\n\r\n");
+				sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			} else {
-				writeSock("Directory is not empty\r\nLength:0\r\n\r\n");
+				sendMsg("Directory is not empty\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			}
 		}
 	}
-	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(500) + "File does not exist\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
@@ -163,7 +167,7 @@ void FileSys::ls()
 {
 	char printS[] = "";
 	string s1;
-	string tempStr = "200 OK\r\nLength:";
+	string tempStr = to_string(200) + "OK\\r\\n\r\nLength:";
 	string strInt, strComplete;
 	string strEnding = "";
 	char* str1;
@@ -173,7 +177,7 @@ void FileSys::ls()
 	
 	//Check to see if anything exists in current directory
 	if (currentDir.num_entries == 0) {
-		writeSock("200 OK\r\nLength:0\r\n\r\n");
+		sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 		return;
 	}
 	//Go through each entry, output each entry name.
@@ -191,8 +195,8 @@ void FileSys::ls()
 				strEnding = strEnding + s1 + "/\n";
 			}
 		}
-		strComplete = tempStr + to_string(strInt.length()) + "\r\n\r\n" + strEnding;
-		writeSock(strComplete);
+		strComplete = tempStr + to_string(strInt.length()) + "\\r\\n\r\n\\r\\n\r\n" + strEnding;
+		sendMsg(strComplete);
 		return;
 	}
 }
@@ -207,27 +211,27 @@ void FileSys::create(const char *name)
 	{
 		if (strcmp (currentDir.dir_entries[i].name, name) == 0)
 		{
-			writeSock("502 File exists\r\nLength:0\r\n\r\n");
+			sendMsg(to_string(500) + "File exists\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 			return;
 		}
 	}
 	
 	if (strlen(name) > MAX_FNAME_SIZE)
 	{
-		writeSock("504 File name is too long\r\nLength:0\r\n\r\n");
+		sendMsg(to_string(500) + "File name is too long\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 		return;	
 	}
 	
 	if (currentDir.num_entries + 1 > MAX_DIR_ENTRIES)
 	{
-		writeSock("506 Directory is full\r\nLength:0\r\n\r\n");
+		sendMsg(to_string(500) + "Directory is full\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 		return;		
 	}
 
 	short inodeEntry = bfs.get_free_block(); //inode
 	if (inodeEntry == 0)
 	{
-		writeSock("505 Disk is full\r\nLength:0\r\n\r\n");
+		sendMsg(to_string(500) + "Disk is full\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 		return;		
 	}
 	
@@ -243,7 +247,7 @@ void FileSys::create(const char *name)
 	currentDir.num_entries++;
 	
 	bfs.write_block(curr_dir, (void*) &currentDir);
-	writeSock("200 OK\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
@@ -267,7 +271,7 @@ void FileSys::append(const char *name, const char *data)
 			//Check if it is a dir
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
+				sendMsg(to_string(501) + "File is a directory\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			}
 			
@@ -289,7 +293,7 @@ void FileSys::append(const char *name, const char *data)
 				
 				if (tempInode.size > MAX_FILE_SIZE)
 				{
-					writeSock("508 Append exceeds maximum file size\r\nLength:0\r\n\r\n");
+					sendMsg(to_string(500) + "Append exceeds maximum file size\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 					return;
 				}
 					
@@ -300,7 +304,7 @@ void FileSys::append(const char *name, const char *data)
 					short newDataBlock = bfs.get_free_block();
 					if (newDataBlock == 0)
 					{
-						writeSock("505 Disk is full\r\nLength:0\r\n\r\n");
+						sendMsg(to_string(500) + "Disk is full\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 						return;		
 					}
 					struct datablock_t newData;
@@ -325,18 +329,18 @@ void FileSys::append(const char *name, const char *data)
 				//Update each with the new information
 				bfs.write_block(currentDir.dir_entries[i].block_num, (void*) &tempInode);
 			}
-			writeSock("200 OK\r\nLength:0\r\n\r\n");
+			sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 			return;
 		}
 	}
-	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(500) + "File does not exist\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
 // display the contents of a data file
 void FileSys::cat(const char *name)
 {
-	string tempStr = "200 OK\r\nLength:";
+	string tempStr = to_string(200) + "OK\\r\\n\r\nLength:";
 	string strInt, strComplete;
 	string strEnding = "";
 	//load current directory
@@ -357,7 +361,7 @@ void FileSys::cat(const char *name)
 			//Ensure it is a file
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
+				sendMsg(to_string(500) + "File is a directory\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			}
 			
@@ -377,9 +381,9 @@ void FileSys::cat(const char *name)
 					//If it hits the correct number of bytes..
 					if (counter == tempInode.size + 1)
 					{
-						strInt = to_string(counter);
-						strComplete = tempStr + strInt + "\r\n\r\n" + strEnding;
-						writeSock(strComplete);
+						strInt = to_string(htonl(counter));
+						strComplete = tempStr + strInt + "\\r\\n\r\n\\r\\n\r\n" + strEnding;
+						sendMsg(strComplete);
 						return;
 					}
 					strEnding = strEnding + tempData.data[j];
@@ -389,14 +393,15 @@ void FileSys::cat(const char *name)
 			
 		}
 	}
-	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(500) + "File does not exist\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
 // display the first N bytes of the file
 void FileSys::head(const char *name, unsigned int n)
-{
-	string tempStr = "200 OK\r\nLength:";
+{	
+	n = ntohl(n);
+	string tempStr = to_string(200) + "OK\\r\\n\r\nLength:";
 	string strInt, strComplete;
 	string strEnding = "";
 	//load current directory
@@ -418,7 +423,7 @@ void FileSys::head(const char *name, unsigned int n)
 			//Ensure it is a file
 			if (tempInode.magic == 0xFFFFFFFF)
 			{
-				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
+				sendMsg(to_string(500) + "File is a directory\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			}
 				
@@ -441,8 +446,8 @@ void FileSys::head(const char *name, unsigned int n)
 					if (counter == n || counter > tempInode.size)
 					{
 						strInt = to_string(counter);
-						strComplete = tempStr + strInt + "\r\n\r\n" + strEnding;
-						writeSock(strComplete);
+						strComplete = tempStr + strInt + "\\r\\n\r\n\\r\\n\r\n" + strEnding;
+						sendMsg(strComplete);
 						return;
 					}
 					strEnding = strEnding + tempData.data[j];
@@ -451,7 +456,7 @@ void FileSys::head(const char *name, unsigned int n)
 			}
 		}
 	}
-	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(500) + "File does not exist\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
@@ -476,7 +481,7 @@ void FileSys::rm(const char *name)
 			//Ensure it is an inode and not a directory
 			if (inodeBlockTemp.magic == 0xFFFFFFFF)
 			{
-				writeSock("501 File is a directory\r\nLength:0\r\n\r\n");
+				sendMsg(to_string(500) + "File is a directory\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 				return;
 			}
 			
@@ -501,11 +506,11 @@ void FileSys::rm(const char *name)
 			bfs.reclaim_block(currentDir.dir_entries[i].block_num);
 			
 			bfs.write_block(curr_dir, (void*) &currentDir);
-			writeSock("200 OK\r\nLength:0\r\n\r\n");
+			sendMsg(to_string(200) + "OK\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 			return;
 		}
 	}
-	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(500) + "File does not exist\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
@@ -513,7 +518,7 @@ void FileSys::rm(const char *name)
 void FileSys::stat(const char *name)
 {
 
-	string strBegin = "200 OK\r\nLength:";
+	string strBegin = to_string(200) + "OK\\r\\n\r\nLength:";
 	string strInt, strComplete;
 	string strEnd, str1, str2, str3, str4, nameStr;
 	struct dirblock_t currentDir;
@@ -553,8 +558,8 @@ void FileSys::stat(const char *name)
 				strEnd = str1 + str2 + str3 + str4;
 				//Ending part
 				
-				strComplete = strBegin + to_string(strEnd.length()) + "\r\n\r\n" + strEnd;
-				writeSock(strComplete);
+				strComplete = strBegin + to_string(strEnd.length()) + "\\r\\n\r\n\\r\\n\r\n" + strEnd;
+				sendMsg(strComplete);
 				return;
 			}
 			else 
@@ -565,15 +570,76 @@ void FileSys::stat(const char *name)
 				string str4 = to_string(currentDir.dir_entries[i].block_num);
 				str2 = "Directory block: " + str4 + "\n";
 				strEnd = str1 + str2;
-				strComplete = strBegin + to_string(strEnd.length()) + "\r\n\r\n" + strEnd;
-				writeSock(strComplete);
+				
+				unsigned hnum = htonl(strEnd.length());
+				
+				strComplete = strBegin +  to_string(hnum) + "\\r\\n\r\n\\r\\n\r\n" + strEnd;
+				sendMsg(strComplete);
 				return;
 			}
 
 		}
 	}
-	writeSock("503 File does not exist\r\nLength:0\r\n\r\n");
+	sendMsg(to_string(500) + "File does not exist\\r\\n\r\nLength:0\\r\\n\r\n\\r\\n\r\n");
 	return;
 }
 
-// HELPER FUNCTIONS (optional)
+
+void FileSys::sendMsg(string msg){ 
+	
+	int bytes_sent(0);
+	int pos(0);
+	size_t size = msg.length();
+	string temp;
+	queue<string> packetQueue;
+	int x(0);
+	int count(0);
+	//for cleaning up the message into proper packets
+	int mod = (size % PACKET_MAX_SIZE);
+	
+	//if this isnt a multiple of packet size, we need to append 0's to the end
+	
+	int totalByteSent = 0;
+	int totalPackets = size / PACKET_MAX_SIZE;
+	
+	
+	//resize so the message is a multiple of packet size//
+	if(mod){
+		if(size < PACKET_MAX_SIZE){
+			msg.resize(PACKET_MAX_SIZE, '0');
+			packetQueue.push(msg);
+		}
+		else//bigger than a single packet
+		{
+			while(pos + PACKET_MAX_SIZE < size){
+				temp = msg.substr(pos, (pos + PACKET_MAX_SIZE));
+				packetQueue.push(temp);
+				pos+=PACKET_MAX_SIZE;
+			}
+			temp = msg.substr(pos);
+			temp.resize(PACKET_MAX_SIZE, '0');
+			packetQueue.push(temp);
+		}
+	}
+	
+	while(!packetQueue.empty()){
+		string package = packetQueue.front();
+		packetQueue.pop();
+		void* p = (void*)package.c_str();
+		while (bytes_sent < PACKET_MAX_SIZE) {
+			if((x = send(fs_sock, p , PACKET_MAX_SIZE,0))<0){
+				cerr<<"Error writing to socket..\n";
+				close(fs_sock);
+				return;
+			}
+			p+=x;
+			bytes_sent +=x;
+		}
+		totalByteSent += bytes_sent;
+		bytes_sent = 0;
+
+	}
+	
+	return;
+}
+

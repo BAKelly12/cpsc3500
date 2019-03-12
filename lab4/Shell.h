@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <queue>
 
 
 
@@ -98,8 +99,20 @@ class Shell {
     void stat_rpc(string fname); 
     
     private:
+	
+	string msgBuffer;//
+	
+	void getResp();
+	
+	void printMessage(string msg);
+	
+	int sockread(size_t len);
+  
     
 };
 
 #endif
-  
+
+
+
+

@@ -83,7 +83,7 @@ int TCP_SERVER::sockread(size_t len)
     ssize_t bytes_received(0);
     while(count > 0)
    {
-       bytes_received = read(newSock, bufptr, count); 
+       bytes_received = read(newSock, bufptr, sizeof(*bufptr)); 
        if (bytes_received <= 0) 
            return bytes_received;
         /* Decrement remaining size */  

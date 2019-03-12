@@ -58,25 +58,7 @@ class FileSys {
     int fs_sock;  // file server socket
 	string toWrite;
 	
-void writeSock(string msg)
-{    
-	cerr << "in writesock... \n\n";
-	int bytes_sent(0);
-	size_t size = msg.length();
-	int x;
-	void* p = (void*)msg.c_str();
-  
-	while(bytes_sent < size){
-		if((x = write(fs_sock, p , size - bytes_sent))<0){
-			cerr<<"Error writing to socket..\n";
-			close(fs_sock);
-		return;
-		}
-		p+=x;
-		bytes_sent +=x;
-	}
-	return;
-}
+	void sendMsg(string msg);
 
     // Additional private variables and Helper functions - if desired
 

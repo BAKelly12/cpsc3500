@@ -381,7 +381,7 @@ void FileSys::cat(const char *name)
 					//If it hits the correct number of bytes..
 					if (counter == tempInode.size + 1)
 					{
-						strInt = to_string(htonl(counter));
+						strInt = to_string(counter);
 						strComplete = tempStr + strInt + "\\r\\n\r\n\\r\\n\r\n" + strEnding;
 						sendMsg(strComplete);
 						return;

@@ -635,7 +635,8 @@ void Shell::getResp(){
 			found = std::string::npos;
 		}	
 	}
-
+  cerr<<"\n\nThis message: "<<thisMsg<<"\n"<<endl;
+  cerr<<"is the stoul here??\n";
 
 	//quick logic to escape function if the operation wasn't successful*/
 	unsigned ezcheck = stoul( thisMsg.substr(0,3) );
@@ -659,7 +660,7 @@ void Shell::getResp(){
 		while (thisMsg[counter + offset] != '\\')
 			offset++;    
 	}
-
+cerr<<"or the second one?";
 	string command2 = thisMsg.substr(counter, offset);
 	unsigned hnum = stoul(command2.c_str(), nullptr, 0);
 	
@@ -807,7 +808,7 @@ void Shell::sendMsg(string msg){
 		while (bytes_sent < PACKET_MAX_SIZE) {
 			if((x = send(cs_sock, p , PACKET_MAX_SIZE,0))<0){
 				cerr<<"Error writing to socket..\n";
-				close(fs_sock);
+				close(cs_sock);
 				return;
 			}
 			p+=x;
@@ -820,6 +821,5 @@ void Shell::sendMsg(string msg){
 	
 	return;
 }
-
 
 

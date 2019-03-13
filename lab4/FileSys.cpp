@@ -1,5 +1,11 @@
 // CPSC 3500: File System
 // Implements the file system commands that are available to the shell.
+
+/**
+ *@Adaptation and implementation by Sam VanNes and Brigid Kelly,
+ * Framework provided Dr. Yingwu Zhu, Seattle Univeristy
+ */
+ 
 #include <string>
 #include <cstring>
 #include <iostream>
@@ -195,7 +201,8 @@ void FileSys::ls()
 				strEnding = strEnding + s1 + "/\n";
 			}
 		}
-		strComplete = tempStr + to_string(strInt.length()) + "\\r\\n\r\n\\r\\n\r\n" + strEnding;
+		strInt = to_string(strEnding.length());
+		strComplete = tempStr + strInt + "\\r\\n\r\n\\r\\n\r\n" + strEnding;
 		sendMsg(strComplete);
 		return;
 	}
@@ -401,6 +408,7 @@ void FileSys::cat(const char *name)
 void FileSys::head(const char *name, unsigned int n)
 {	
 	n = ntohl(n);
+	cerr<<"head: n = "<<n<<"\n";
 	string tempStr = to_string(200) + "OK\\r\\n\r\nLength:";
 	string strInt, strComplete;
 	string strEnding = "";

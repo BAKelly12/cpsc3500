@@ -1,28 +1,113 @@
 //// Each team member's name and contributions ////////////
-Team member #1: xxx
-Contributions:
+Team member #1: Brigid Kelly
+Contributions: Networking, message/packet handling, debugging, test-logic... 50%
 
-Team member #2: xxx
-Contributions:
+Team member #2: Sam VanNes
+Contributions: File System, command parse functions, file system command testing, debugging ... 50%
 
 ...
-
-
 
 
 //// My own rating on the functionality ///////////////////
-Rating: A, B, C, D, or F?
+Rating:  B
 Explanation: 
+
+	The program is strong in regards to variable packet length.  It is able to accomodate any size 
+	string and packet as long as server and client both have agreed upon a predetermined packet read size. 
+	currently it is 32 bytes long. 
+	
+	Most code is entirely portable and can be used in future projects.
+ 
+	There is a small issue with packet concatenation, where a single phantom space can show itself
+	within the return string output.  It does not harm the process in any way, just annoying.
+ 
+	FileSystem commands have been throughly tested locally and should be entirely functioning.
+	
+	Large append operations seem to cause an issue with reads of memory out of bounds on server side upon 
+	receiving the incoming command. 
+	
+	Most arguments may only utilize a send of MAX_PACKET_SIZE, but this could be altered by utilizing
+	the "Shell::sendMsg()" private member function instead of a hard-coded single socket write.
+	
+	Minor memory leaks in server/client address info structures.  
+	
+	Bugs circumvented by str.find(two)/str.find(five):
+	
+		This logic was implemented to deal with receival of a 50X error that resulted in
+		the next incoming packet string to not fit the proper format.  This may cause issues 
+		with packet/message overlap, should iterators fall out of order, but it prevents kernel from
+		throwing an exception and prematurely ending the client session.
+		
+
 ...
-
-
 
 
 //// Test cases ///////////////////////////////////////////
-Test case #1: mkdir abc
-Results: 
+Test case #1: mkdir dir1
+success
 
+Test case #2: mkdir dir1
+502 error
 
-Test case #2: 
+Test case #3: mkdir dir2
+success  
 
-...
+Test case #4: create file1
+success
+
+Test case #5: ls
+dir1/, file1
+
+Test case #6: cd file1
+500 error
+
+Test case #7: cd mkdir2
+success
+
+Test case #8: ls
+empty folder
+
+Test case #9: create file3
+success
+
+Test case #10: stat file3
+success, info displayed
+
+Test case #11: append file3 Thisisthemessage
+success
+
+Test case #12: stat file3
+success, info displayed with updated size
+
+Test case #13: cat file3
+success, displays "Thisisthemessage"
+
+Test case #14: append file3 Secondmessage
+success
+
+Test case #15: stat file3
+success, resulting file size updated
+
+Test case #16: head file3 9
+success, "Thisisthe"
+
+Test case #17: home
+success
+
+Test case #18: stat dir2
+success, displays name and the block number
+
+Test case #19: rm file1
+success
+
+Test case #20: ls
+dir1/, dir2/
+
+Test case #21: rmdir dir2
+success
+
+Test case #22: stat dir2
+503 error
+
+Test case #23: ls
+dir1/

@@ -11,8 +11,10 @@
 #include <unistd.h> 
 #include "FileSys.h"
 #include <arpa/inet.h>
+#include <cerrno>
 
 #define MAX_INC_READ_SIZE 4096
+
 #include <netinet/in.h>
 #define PACKET_MAX_SIZE 32
 
@@ -59,15 +61,14 @@ int main(int argc, char* argv[]) {
     //system operation which returns the results or error messages back to the clinet
     //until the client closes the TCP connection.
     
-
-    
-
 	
-	for(int i(0); i<10;i++){
-		cerr<<"Getting command\n\n";
-	
-	getCmd();
+	while(1){
+		
+		getCmd();
+		
 	}
+
+
     //close the listening socket
     
     unbind();
@@ -77,7 +78,9 @@ int main(int argc, char* argv[]) {
     fs.unmount();
     
     /*Close the socket*/
-
+	close(sock);
+	close(newSock);
+	
     return 0;
 }
 
@@ -92,37 +95,28 @@ void getCmd(){
     string msg;
 	size_t found;
     int bytes_read(0);
-
+    //How to find \\r\\n\r\n
     while( (found = msg.find(s2) )== std::string::npos){
 
-		/**keep this stuff*/
-		cerr<<"in getCmd...\n\n";
-        if(bytes_read > 32){
+        if(bytes_read > MAX_INC_READ_SIZE){
             cerr<<"Incoming command exceeds max allowable size\n";
             break;
         }
 		
         size_t readSize = sockread(PACKET_MAX_SIZE);
-		
-		cerr<<"readsize in getCmd = " << readSize<<"\n";
+	
 		
 		if(bytes_read==0)
 			bytes_read = readSize;
 		else
 			bytes_read+= readSize;
 		
-		cerr<<"Bytes read in getCmd = "<<bytes_read<<"\n";
-		
         msg = msg + message;
 		
-		cerr<<"found = " << found << "\n";
 	}
 		
 	s1 = msg.substr(0, found);
-		
-	cout<<"\n"<<s1<<endl;
- 
-	
+
     parseAndCall(s1);  
 	
 }
@@ -140,6 +134,9 @@ void parseAndCall(string message)
 	int sizeOfString = message.length();
 	string command;
 	const int ending = 0;
+	
+	cerr<<"\nCommand: "<< message << endl;
+	
 	int numSpaces, counter; //For head and append parsing
 	if (message[0] == 'm') {
 		command = message.substr (6, sizeOfString - 6 - ending);
@@ -220,7 +217,7 @@ int sockread(size_t len)
     ssize_t bytes_received(0);
     while(count > 0)
    {
-       bytes_received = read(newSock, bufptr, count); 
+       bytes_received = read(newSock, bufptr,sizeof(char)); 
        if (bytes_received <= 0) 
            return bytes_received;
         /* Decrement remaining size */  
@@ -229,19 +226,25 @@ int sockread(size_t len)
         bufptr += bytes_received;   
     }
     message = buf;
-	cerr<<message;
-    cerr<< endl<<"Bytes received: "<<bytes_received<<"\n";
+	cerr<<"Incoming message: " <<message<<endl;
     return len;
+
 }
-
-
 
 int knit(int p)
 {  
+
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(p); 
     serverAddress.sin_addr.s_addr = htonl(INADDR_ANY); 
 
+	int enable = 1;
+	int rv;
+	//if (rv = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0){
+		//cerr<<"Can't recycle..\n\n"<<gai_strerror(rv);
+	//	return -1;
+	//}
+	
     if((sock = socket(AF_INET, SOCK_STREAM, 0))<0){
       cerr<<"Socket failed to create\n\n";
       return -1;

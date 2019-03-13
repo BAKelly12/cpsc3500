@@ -1,12 +1,18 @@
 // CPSC 3500: Shell
 // Implements a basic shell (command line interface) for the file system
 
+/**
+ *@Implementations by Brigid Kelly & Sam VanNes 
+ *  Framework and shell functionality courtesy of
+ *  Dr. Yingwu Zhu, Seattle University
+ */
+ 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string.h>
 #include <cerrno>
-#define SERVER_PORT "11243" 
+#define SERVER_PORT "11242" 
 
 using namespace std;
 
@@ -21,9 +27,7 @@ void Shell::mountNFS(string fs_loc) {
     cerr<<"FS Already Mounted..\n\n";
     return;
   }
-  
 
-  
   /*INIT VARS*/
   struct addrinfo hints, *p, *servInfo;
   bzero((char*) &servInfo, sizeof(servInfo));
@@ -68,6 +72,7 @@ void Shell::mountNFS(string fs_loc) {
   /*END OF DNS LOOKUP*/
   
   is_mounted = true;
+  freeaddrinfo(servInfo);
   return;
 }
 
@@ -94,7 +99,6 @@ void Shell::mkdir_rpc(string dname)
   string mkdir = "mkdir " + dname + "\\r\\n\r\n";
   
   mkdir.resize(PACKET_MAX_SIZE,'0');
-  cout<<"mkdir size: " << sizeof(mkdir)<<endl;
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , mkdir.c_str() , strlen( mkdir.c_str() ) , 0)) < 0)
@@ -104,16 +108,9 @@ void Shell::mkdir_rpc(string dname)
       }
 	  getResp();
 	}
-    else
-		
+    else		
         return;
- 
- 
-  cerr<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<"\n";
-  
 
-  
-  
   return;
   
 }
@@ -127,7 +124,6 @@ void Shell::cd_rpc(string dname) {
   string cd = "cd " + dname + "\\r\\n\r\n";
   
   cd.resize(PACKET_MAX_SIZE,'0');
-  cout<<"cd size: " << sizeof(cd)<<endl;
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , cd.c_str() , strlen( cd.c_str() ) , 0)) < 0)
@@ -139,12 +135,8 @@ void Shell::cd_rpc(string dname) {
   }
     else
       return;
- 
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
-	return;
-  
-  
+
+	return; 
 }
 
 // Remote procedure call on home
@@ -155,8 +147,6 @@ void Shell::home_rpc() {
   string home = "home\\r\\n\r\n";
   
   home.resize(PACKET_MAX_SIZE,'0');
-  cout<<"home size: " << sizeof(home)<<endl;
-  
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , home.c_str() , strlen( home.c_str() ) , 0)) < 0)
@@ -170,11 +160,8 @@ void Shell::home_rpc() {
     else
       return;
  
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
 	return;
-  
-  
+ 
 }
 
 // Remote procedure call on rmdir
@@ -185,7 +172,7 @@ void Shell::rmdir_rpc(string dname) {
   string rmdir = "rmdir " + dname + "\\r\\n\r\n";
   
   rmdir.resize(PACKET_MAX_SIZE,'0');
-  cout<<"rmdir size: " << sizeof(rmdir)<<endl;
+
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , rmdir.c_str() , strlen( rmdir.c_str() ) , 0)) < 0)
@@ -197,12 +184,8 @@ void Shell::rmdir_rpc(string dname) {
   }
     else
       return;
- 
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
 	return;
-  
-  
+
 }
 
 // Remote procedure call on ls
@@ -213,7 +196,6 @@ void Shell::ls_rpc() {
   string ls = "ls\\r\\n\r\n";
   
   ls.resize(PACKET_MAX_SIZE,'0');
-  cout<<"ls size: " << sizeof(ls)<<endl;
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , ls.c_str() , strlen( ls.c_str() ) , 0)) < 0)
@@ -225,23 +207,17 @@ void Shell::ls_rpc() {
   }
     else
       return;
- 
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
 	return;
-
 }
 
 // Remote procedure call on create
 void Shell::create_rpc(string fname) {
-  
-    
+ 
   int bytes_sent(0);
   
   string create = "create " + fname + "\\r\\n\r\n";
   
   create.resize(PACKET_MAX_SIZE,'0');
-  cout<<"create size: " << sizeof(create)<<endl;
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , create.c_str() , strlen( create.c_str() ) , 0)) < 0)
@@ -253,53 +229,20 @@ void Shell::create_rpc(string fname) {
   }
     else
       return;
- 
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
 	return;
   
   
 }
 
 
-/******************************************/
 // Remote procedure call on append
 void Shell::append_rpc(string fname, string data) {
  
-  int bytes_sent(0);
-  
-  string append = "append " + fname + " " + data + "\\r\\n\r\n";
-  
-  append.resize(PACKET_MAX_SIZE,'0');
-  cout<<"cd size: " << sizeof(append)<<endl;
-	if(cs_sock != -1) 
-	{
-      if(( bytes_sent=send(cs_sock , append.c_str() , strlen( append.c_str() ) , 0)) < 0)
-      {
-        cout << "Send failed : " << append << endl;
-        return; 
-      }
-	getResp();
-  }
-    else
-      return;
- 
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
-	return;
-  //for this:
-  //send append, then on server if append, it will get ready to accept a number of bytes
-   //  somehow
-  //then it will create something to take in that many bytes
-  //then let the client know its ready to accept
-  //then client begins send
-  
+  int bytes_sent(0); 
+  string append = "append " + fname + " " + data + "\\r\\n\r\n"; 
+  sendMsg(append);
+  getResp();
 }
-
-
-/******************************************/
-
-
 
 // Remote procesure call on cat
 void Shell::cat_rpc(string fname) {
@@ -309,7 +252,6 @@ void Shell::cat_rpc(string fname) {
   string cat = "cat " + fname + "\\r\\n\r\n";
   
   cat.resize(PACKET_MAX_SIZE,'0');
-  cout<<"cat size: " << sizeof(cat)<<endl;
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , cat.c_str() , strlen( cat.c_str() ) , 0)) < 0)
@@ -322,8 +264,6 @@ void Shell::cat_rpc(string fname) {
     else
       return;
  
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
 	return;
   
 }
@@ -335,10 +275,9 @@ void Shell::head_rpc(string fname, int n) {
    string nbos = to_string(nbo);
    int bytes_sent(0);
   
-  string head = "head " + fname + " " + nbos + "\\r\\n\r\n";
+   string head = "head " + fname + " " + nbos + "\\r\\n\r\n";
   
-  head.resize(PACKET_MAX_SIZE,'0');
-  cout<<"head size: " << sizeof(head)<<endl;
+    head.resize(PACKET_MAX_SIZE,'0');
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , head.c_str() , strlen( head.c_str() ) , 0)) < 0)
@@ -347,12 +286,10 @@ void Shell::head_rpc(string fname, int n) {
         return;
       }
 	getResp();
-  }
+    }
     else
       return;
- 
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+
 	return;
   
   //this still needs to be able to send the int
@@ -366,7 +303,6 @@ void Shell::rm_rpc(string fname) {
   string rm = "rm " + fname + "\\r\\n\r\n";
   
   rm.resize(PACKET_MAX_SIZE,'0');
-  cout<<"rm size: " << sizeof(rm)<<endl;
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , rm.c_str() , strlen( rm.c_str() ) , 0)) < 0)
@@ -379,8 +315,7 @@ void Shell::rm_rpc(string fname) {
     else
       return;
  
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+
 	return;
   
 }
@@ -389,10 +324,9 @@ void Shell::rm_rpc(string fname) {
 void Shell::stat_rpc(string fname) {
     int bytes_sent(0);
   
-  string stat = "stat " + fname + "\\r\\n\r\n";
+    string stat = "stat " + fname + "\\r\\n\r\n";
   
-  stat.resize(PACKET_MAX_SIZE,'0');
-  cout<<"stat size: " << sizeof(stat)<<endl;
+    stat.resize(PACKET_MAX_SIZE,'0');
 	if(cs_sock != -1) 
 	{
       if(( bytes_sent=send(cs_sock , stat.c_str() , strlen( stat.c_str() ) , 0)) < 0)
@@ -404,9 +338,7 @@ void Shell::stat_rpc(string fname) {
   }
     else
       return;
- 
- 
-  cout<<"send succeeded\n\n Bytes sent: "<<bytes_sent<<endl;
+
 	return;
   
 }
@@ -599,9 +531,7 @@ Shell::Command Shell::parse_command(string command_str)
 }
 
 
-
 void Shell::getResp(){
-	
 	
   	size_t found;
 	int fcount(0);
@@ -631,20 +561,30 @@ void Shell::getResp(){
         thisMsg = thisMsg + msgBuffer;
 		if(found != std::string::npos && fcount < 3){
 			fcount++;
-			curPos = found+1;
+			if(fcount != 3)
+				curPos = found+1;
 			found = std::string::npos;
 		}	
 	}
-  cerr<<"\n\nThis message: "<<thisMsg<<"\n"<<endl;
-  cerr<<"is the stoul here??\n";
-
+	
+	//this is a cheese way of dumping the code if there's a transmission error
+	string five = "5";
+	string two = "2";
+	if( !( (thisMsg.find(five)==0) || (thisMsg.find(two)==0) ))  {
+		msgBuffer.clear();
+		thisMsg.clear();
+		cerr<<"\nError with socket tramission, dumping buffer\n";
+		return;
+	}
+	
 	//quick logic to escape function if the operation wasn't successful*/
 	unsigned ezcheck = stoul( thisMsg.substr(0,3) );
-	cerr<<"EZCHECK : "<<ezcheck<<endl;
 	if(ezcheck!=200){
 		//there was a problem
+		msgBuffer.clear();
 		int upper=thisMsg.find(s2);
 		cerr<<thisMsg.substr(3,upper-3)<<endl;
+		thisMsg.clear();
 		return;		
 	}
 	
@@ -660,21 +600,16 @@ void Shell::getResp(){
 		while (thisMsg[counter + offset] != '\\')
 			offset++;    
 	}
-cerr<<"or the second one?";
 	string command2 = thisMsg.substr(counter, offset);
 	unsigned hnum = stoul(command2.c_str(), nullptr, 0);
 	
-	
 	/*hnum is the length of the message from server after header*/
-	/*it will also be counter for remaining characters to be read*/
-	//hnum = ntohl(hnum);
-	
+
 	/*if hnum is zero, lets just get out of here*/
 	if(!hnum){
-		cerr<<"Operation successful\n\n";
+		cerr<<"\nOperation successful\n\n";
 		return;
 	}
-	
 	
 	/*This is the end of the header*/
 	size_t headEnd = thisMsg.rfind(s2)+4;
@@ -684,7 +619,7 @@ cerr<<"or the second one?";
 	
 
 	while( bytes_read < bytes_remain){
-		cerr<<"Number of bytes remiaining to read: " << bytes_remain << "\n";
+	
 		if((readSize=sockread(PACKET_MAX_SIZE))<0){
 			cerr<<"Error reading message after header..\n\n";
 			return;
@@ -694,75 +629,31 @@ cerr<<"or the second one?";
 		/*if we've already read enough data to find the end, lets just get the end*/
 		
 	}
-	cout<<thisMsg.substr(headEnd, hnum)<<"\n";
+	cout<<"\n"<<thisMsg.substr(headEnd, hnum + 2)<<"\n";
 }
 	
-
 
 int Shell::sockread(size_t len)
 {
     char buf[len];
     size_t count = len;
-    char  *bufptr = (char*)buf;
-    cerr<<"Reading from socket..\n";  
+    char  *bufptr = (char*)buf; 
     ssize_t bytes_received(0);
     while(count > 0)
-   {
-	   cerr<<"\nShell:  sockread: In read loop\n";
+   {	   
        bytes_received = read(cs_sock, bufptr, count); 
-	   cerr<<"Did we get anything? " << bytes_received<<endl;
        if (bytes_received <= 0) 
            return bytes_received;
         /* Decrement remaining size */  
         count -= bytes_received;  
         /*increment buffer pointer*/
         bufptr += bytes_received;  
-        ///*tabulate total receive size*/
-       // len+=bytes_received;
     }
-    msgBuffer = buf;
+    msgBuffer = string(buf);
 	cerr<<msgBuffer;
-    cerr<< endl<<"Bytes received: "<<bytes_received<<"\n";
     return len;
 }
 
-void Shell::printMessage(string msg)
-{
-	
-	int counter = 0;
-	int offset = 0;
-	string command1,command2;
-	cerr<<"In print\n\n";
-	command1= msg.substr(0, 3);
-	unsigned hnum = stoul(command1.c_str(), nullptr, 0);
-	hnum = ntohl(hnum);
-	//Error message
-	if (hnum != 200)
-	{
-		cout << msg << "\n";
-		return;
-	}
-	
-	while (msg[counter] != ':')
-		counter++;
-	counter++; //Go just after length
-	if (msg[counter] == 0)
-		return;
-	else
-	{
-		while (counter + offset != '\\')
-		offset++;    
-	}
-	command2 = msg.substr(counter, offset);
-	hnum = stoul(command2.c_str(), nullptr, 0);
-	hnum = ntohl(hnum);
-	
-	
-	//From the length of string minus the length of message to the end.
-}
-
-
-  
 
 void Shell::sendMsg(string msg){ 
 	
@@ -801,6 +692,7 @@ void Shell::sendMsg(string msg){
 		}
 	}
 	
+	/* Dump the packet queue onto the network*/
 	while(!packetQueue.empty()){
 		string package = packetQueue.front();
 		packetQueue.pop();
@@ -816,9 +708,7 @@ void Shell::sendMsg(string msg){
 		}
 		totalByteSent += bytes_sent;
 		bytes_sent = 0;
-
 	}
-	
 	return;
 }
 

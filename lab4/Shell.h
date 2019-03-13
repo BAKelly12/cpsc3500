@@ -1,6 +1,10 @@
 // CPSC 3500: Shell
 // Implements a basic shell (command line interface) for the file system
 
+/**Code adapted by Brigid Kelly and Sam VanNes 
+ *  Framework and shell implementation courtesy of Dr Yingwu Zhu, Seattle University
+ */
+
 #ifndef SHELL_H
 #define SHELL_H
 
@@ -12,8 +16,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <queue>
-
-
 
 
 // Shell
@@ -102,11 +104,14 @@ class Shell {
 	
 	string msgBuffer;//
 	
+	//waits for resposne from server and calls sockread
 	void getResp();
 	
-	void printMessage(string msg);
-	
+	//reads input size from buffer, places in msgBuffer
 	int sockread(size_t len);
+	
+	//handles outgoing messages by building packets of predefined length
+	void sendMsg(string msg);
   
     
 };

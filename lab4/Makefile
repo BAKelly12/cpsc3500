@@ -7,6 +7,7 @@ OBJ	:= $(patsubst %.cpp, %.o, $(SRC))
 
 all: nfsserver nfsclient
 
+	
 nfsserver: $(OBJ)
 	$(CXX) -o $@ $(OBJ)
 	rm -f DISK
@@ -17,3 +18,9 @@ nfsclient: Shell.o client.o
 
 clean:
 	rm -f nfsserver nfsclient *.o DISK
+	
+	
+tar:
+	tar -cvf p4.tar $(SRC) $(HDR) README 
+
+	
